@@ -1,15 +1,15 @@
-package com.example.bank_project.service.impl;
+package com.example.banknew.service.impl;
 
-import com.example.bank_project.dtos.ClientDto;
-import com.example.bank_project.dtos.ManagerDto;
-import com.example.bank_project.entities.ClientEntity;
-import com.example.bank_project.entities.ManagerEntity;
-import com.example.bank_project.enums.Status;
-import com.example.bank_project.exception.NotFoundException;
-import com.example.bank_project.exception.ValidationException;
-import com.example.bank_project.mappers.ManagerMapper;
-import com.example.bank_project.repository.ManagerRepository;
-import com.example.bank_project.service.ManagerService;
+import com.example.banknew.dtos.ClientDto;
+import com.example.banknew.dtos.ManagerDto;
+import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.entities.ManagerEntity;
+import com.example.banknew.enums.Status;
+import com.example.banknew.exception.NotFoundException;
+import com.example.banknew.exception.ValidationException;
+import com.example.banknew.mappers.ManagerMapper;
+import com.example.banknew.repository.ManagerRepository;
+import com.example.banknew.service.ManagerService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;

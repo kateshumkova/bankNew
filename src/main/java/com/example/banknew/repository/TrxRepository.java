@@ -1,5 +1,5 @@
-package com.example.bank_project.repository;
-import com.example.bank_project.entities.TrxEntity;
+package com.example.banknew.repository;
+import com.example.banknew.entities.TrxEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

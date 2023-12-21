@@ -1,15 +1,15 @@
-package com.example.bank_project.service.impl;
+package com.example.banknew.service.impl;
 
-import com.example.bank_project.dtos.CreateClientUserDto;
-import com.example.bank_project.dtos.UserDto;
-import com.example.bank_project.entities.ClientEntity;
-import com.example.bank_project.entities.RoleEntity;
-import com.example.bank_project.entities.UserEntity;
-import com.example.bank_project.entities.UserRoleEntity;
-import com.example.bank_project.exception.NotFoundException;
-import com.example.bank_project.repository.ClientRepository;
-import com.example.bank_project.repository.RoleRepository;
-import com.example.bank_project.repository.UserRepository;
+import com.example.banknew.dtos.CreateClientUserDto;
+import com.example.banknew.dtos.UserDto;
+import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.entities.RoleEntity;
+import com.example.banknew.entities.UserEntity;
+import com.example.banknew.entities.UserRoleEntity;
+import com.example.banknew.exception.NotFoundException;
+import com.example.banknew.repository.ClientRepository;
+import com.example.banknew.repository.RoleRepository;
+import com.example.banknew.repository.UserRepository;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.security.core.userdetails.User;

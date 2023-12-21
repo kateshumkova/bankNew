@@ -1,8 +1,8 @@
-package com.example.bank_project.service;
+package com.example.banknew.service;
 
-import com.example.bank_project.dtos.CreateAgreementRequest;
-import com.example.bank_project.dtos.AccountDto;
-import com.example.bank_project.entities.AccountEntity;
+import com.example.banknew.dtos.CreateAgreementRequest;
+import com.example.banknew.dtos.AccountDto;
+import com.example.banknew.entities.AccountEntity;
 
 import java.util.List;
 

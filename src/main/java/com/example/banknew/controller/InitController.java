@@ -1,12 +1,12 @@
-package com.example.bank_project.controller;
+package com.example.banknew.controller;
 
-import com.example.bank_project.dtos.AccountDto;
-import com.example.bank_project.dtos.ClientDto;
-import com.example.bank_project.dtos.CreateAgreementRequest;
-import com.example.bank_project.entities.AccountEntity;
-import com.example.bank_project.service.AccountService;
-import com.example.bank_project.service.AgreementService;
-import com.example.bank_project.service.ClientService;
+import com.example.banknew.dtos.AccountDto;
+import com.example.banknew.dtos.ClientDto;
+import com.example.banknew.dtos.CreateAgreementRequest;
+import com.example.banknew.entities.AccountEntity;
+import com.example.banknew.service.AccountService;
+import com.example.banknew.service.AgreementService;
+import com.example.banknew.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;
@@ -20,7 +20,7 @@ import org.springframework.web.bind.annotation.*;
 import java.math.BigDecimal;
 import java.util.List;
 
-import static com.example.bank_project.enums.Status.ACTIVE;
+import static com.example.banknew.enums.Status.ACTIVE;
 
 @RestController
 @RequestMapping("/noauth/initdb")

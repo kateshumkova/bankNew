@@ -1,4 +1,4 @@
-package com.example.bank_project.enums;
+package com.example.banknew.enums;
 
 public enum Status {
     ACTIVE,

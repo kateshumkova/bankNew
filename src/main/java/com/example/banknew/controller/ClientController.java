@@ -1,8 +1,8 @@
-package com.example.bank_project.controller;
+package com.example.banknew.controller;
 
-import com.example.bank_project.dtos.ClientDto;
-import com.example.bank_project.entities.ClientEntity;
-import com.example.bank_project.service.ClientService;
+import com.example.banknew.dtos.ClientDto;
+import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

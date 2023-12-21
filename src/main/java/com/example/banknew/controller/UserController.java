@@ -1,12 +1,12 @@
-package com.example.bank_project.controller;
+package com.example.banknew.controller;
 
-import com.example.bank_project.dtos.AccountDto;
-import com.example.bank_project.dtos.CreateAgreementRequest;
-import com.example.bank_project.dtos.CreateClientUserDto;
-import com.example.bank_project.dtos.UserDto;
-import com.example.bank_project.entities.AccountEntity;
-import com.example.bank_project.service.AccountService;
-import com.example.bank_project.service.impl.UserService;
+import com.example.banknew.dtos.AccountDto;
+import com.example.banknew.dtos.CreateAgreementRequest;
+import com.example.banknew.dtos.CreateClientUserDto;
+import com.example.banknew.dtos.UserDto;
+import com.example.banknew.entities.AccountEntity;
+import com.example.banknew.service.AccountService;
+import com.example.banknew.service.impl.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -1,9 +1,9 @@
-package com.example.bank_project.mappers;
+package com.example.banknew.mappers;
 
-import com.example.bank_project.dtos.UserDto;
-import com.example.bank_project.dtos.UserRoleDto;
-import com.example.bank_project.entities.UserEntity;
-import com.example.bank_project.entities.UserRoleEntity;
+import com.example.banknew.dtos.UserDto;
+import com.example.banknew.dtos.UserRoleDto;
+import com.example.banknew.entities.UserEntity;
+import com.example.banknew.entities.UserRoleEntity;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")

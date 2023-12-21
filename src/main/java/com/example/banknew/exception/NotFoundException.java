@@ -1,4 +1,4 @@
-package com.example.bank_project.exception;
+package com.example.banknew.exception;
 
 public class NotFoundException extends RuntimeException {
     public NotFoundException(String message) {

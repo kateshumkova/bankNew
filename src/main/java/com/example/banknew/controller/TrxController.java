@@ -1,10 +1,10 @@
-package com.example.bank_project.controller;
+package com.example.banknew.controller;
 
-import com.example.bank_project.dtos.*;
-import com.example.bank_project.entities.AccountEntity;
-import com.example.bank_project.entities.ClientEntity;
-import com.example.bank_project.entities.TrxEntity;
-import com.example.bank_project.service.TrxService;
+import com.example.banknew.dtos.*;
+import com.example.banknew.entities.AccountEntity;
+import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.entities.TrxEntity;
+import com.example.banknew.service.TrxService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.media.Content;

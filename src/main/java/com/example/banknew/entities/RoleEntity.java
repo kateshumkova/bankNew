@@ -1,4 +1,4 @@
-package com.example.bank_project.entities;
+package com.example.banknew.entities;
 
 import jakarta.persistence.*;
 import org.springframework.security.core.GrantedAuthority;

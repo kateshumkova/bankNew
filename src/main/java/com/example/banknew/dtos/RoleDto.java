@@ -1,6 +1,6 @@
-package com.example.bank_project.dtos;
+package com.example.banknew.dtos;
 
-import com.example.bank_project.entities.UserEntity;
+import com.example.banknew.entities.UserEntity;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.ManyToMany;

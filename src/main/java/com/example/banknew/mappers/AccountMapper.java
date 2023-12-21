@@ -1,11 +1,11 @@
-package com.example.bank_project.mappers;
+package com.example.banknew.mappers;
 
-import com.example.bank_project.dtos.AccountDto;
-import com.example.bank_project.dtos.ClientDto;
-import com.example.bank_project.dtos.ManagerDto;
-import com.example.bank_project.entities.AccountEntity;
-import com.example.bank_project.entities.ClientEntity;
-import com.example.bank_project.entities.ManagerEntity;
+import com.example.banknew.dtos.AccountDto;
+import com.example.banknew.dtos.ClientDto;
+import com.example.banknew.dtos.ManagerDto;
+import com.example.banknew.entities.AccountEntity;
+import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.entities.ManagerEntity;
 import org.mapstruct.*;
 
 @Mapper(componentModel = "spring")

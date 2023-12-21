@@ -1,7 +1,7 @@
-package com.example.bank_project.entities;
+package com.example.banknew.entities;
 
-import com.example.bank_project.enums.Status;
-import com.example.bank_project.enums.TrxType;
+import com.example.banknew.enums.Status;
+import com.example.banknew.enums.TrxType;
 import jakarta.persistence.*;
 import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;

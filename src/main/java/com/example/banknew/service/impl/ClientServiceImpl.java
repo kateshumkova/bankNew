@@ -1,14 +1,14 @@
-package com.example.bank_project.service.impl;
+package com.example.banknew.service.impl;
 
-import com.example.bank_project.dtos.ClientDto;
-import com.example.bank_project.entities.AccountEntity;
-import com.example.bank_project.entities.ClientEntity;
-import com.example.bank_project.enums.Status;
-import com.example.bank_project.exception.NotFoundException;
-import com.example.bank_project.exception.ValidationException;
-import com.example.bank_project.mappers.ClientMapper;
-import com.example.bank_project.repository.ClientRepository;
-import com.example.bank_project.service.ClientService;
+import com.example.banknew.dtos.ClientDto;
+import com.example.banknew.entities.AccountEntity;
+import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.enums.Status;
+import com.example.banknew.exception.NotFoundException;
+import com.example.banknew.exception.ValidationException;
+import com.example.banknew.mappers.ClientMapper;
+import com.example.banknew.repository.ClientRepository;
+import com.example.banknew.service.ClientService;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
 import jakarta.persistence.FetchType;

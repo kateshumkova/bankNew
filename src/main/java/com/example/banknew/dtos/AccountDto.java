@@ -1,6 +1,6 @@
-package com.example.bank_project.dtos;
+package com.example.banknew.dtos;
 
-import com.example.bank_project.enums.Status;
+import com.example.banknew.enums.Status;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;

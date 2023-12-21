@@ -1,13 +1,13 @@
-package com.example.bank_project.service.impl;
+package com.example.banknew.service.impl;
 
-import com.example.bank_project.dtos.*;
-import com.example.bank_project.entities.*;
-import com.example.bank_project.exception.NotFoundException;
-import com.example.bank_project.exception.ValidationException;
-import com.example.bank_project.mappers.*;
-import com.example.bank_project.repository.*;
-import com.example.bank_project.service.AccountService;
-import com.example.bank_project.service.AgreementService;
+import com.example.banknew.dtos.*;
+import com.example.banknew.entities.*;
+import com.example.banknew.exception.NotFoundException;
+import com.example.banknew.exception.ValidationException;
+import com.example.banknew.mappers.*;
+import com.example.banknew.repository.*;
+import com.example.banknew.service.AccountService;
+import com.example.banknew.service.AgreementService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -23,8 +23,8 @@ import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 
-import static com.example.bank_project.enums.Status.ACTIVE;
-import static com.example.bank_project.enums.Status.INACTIVE;
+import static com.example.banknew.enums.Status.ACTIVE;
+import static com.example.banknew.enums.Status.INACTIVE;
 
 @Service
 @RequiredArgsConstructor

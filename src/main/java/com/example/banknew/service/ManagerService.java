@@ -1,8 +1,8 @@
-package com.example.bank_project.service;
-import com.example.bank_project.dtos.ClientDto;
-import com.example.bank_project.dtos.ManagerDto;
-import com.example.bank_project.entities.ClientEntity;
-import com.example.bank_project.entities.ManagerEntity;
+package com.example.banknew.service;
+import com.example.banknew.dtos.ClientDto;
+import com.example.banknew.dtos.ManagerDto;
+import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.entities.ManagerEntity;
 
 import java.util.List;
 

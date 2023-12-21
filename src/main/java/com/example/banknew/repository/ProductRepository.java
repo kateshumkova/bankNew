@@ -1,8 +1,8 @@
-package com.example.bank_project.repository;
+package com.example.banknew.repository;
 
 
-import com.example.bank_project.entities.ClientEntity;
-import com.example.bank_project.entities.ProductEntity;
+import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.entities.ProductEntity;
 import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;

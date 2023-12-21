@@ -1,8 +1,8 @@
-package com.example.bank_project.service;
-import com.example.bank_project.dtos.ClientDto;
-import com.example.bank_project.dtos.TrxDto;
-import com.example.bank_project.entities.ClientEntity;
-import com.example.bank_project.entities.TrxEntity;
+package com.example.banknew.service;
+import com.example.banknew.dtos.ClientDto;
+import com.example.banknew.dtos.TrxDto;
+import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.entities.TrxEntity;
 import org.springframework.security.core.Authentication;
 
 import java.util.List;

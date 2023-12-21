@@ -1,4 +1,4 @@
-//package com.example.bank_project.dtos;
+//package com.example.banknew.dtos;
 //
 //import io.swagger.v3.oas.annotations.media.Schema;
 //import lombok.Getter;
