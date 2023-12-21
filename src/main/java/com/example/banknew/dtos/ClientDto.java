@@ -31,5 +31,7 @@ public class ClientDto {
     private String address;
     @Schema(description = "Телефон клиента", example = "89028304490")
     private String phone;
+   // @Schema(description = "id user", example = "2")
+   // private Long userId;
 
 }

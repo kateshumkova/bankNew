@@ -15,7 +15,7 @@ import java.util.Set;
 
 public class UserDto {
 
-    @Schema(description = "Имя пользователя", example = "maryPoppins")
+    @Schema(description = "Имя пользователя в виде email", example = "mary.poppins@gmail.com")
     private String username;
     @Schema(description = "Пароль пользователя", example = "Qwerty123")
     private String password;

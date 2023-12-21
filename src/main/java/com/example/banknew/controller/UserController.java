@@ -40,17 +40,17 @@ public class UserController {
     }
 
 
-    @Operation(summary = "Создать запись о новом пользователе - клиенте")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = "Пользователь добавлен",
-                    content = {@Content(mediaType = "application/json",
-                            schema = @Schema(implementation = CreateClientUserDto.class))}),
-            @ApiResponse(responseCode = "400", description = "Неверный запрос",
-                    content = @Content),
-            @ApiResponse(responseCode = "404", description = "Пользователь не добавлен",
-                    content = @Content)})
-    @PostMapping("/client/")
-    public void add(@RequestBody CreateClientUserDto createClientUserDto) {
-        userService.createClientUser(createClientUserDto);
-    }
+//    @Operation(summary = "Создать запись о новом пользователе - клиенте")
+//    @ApiResponses(value = {
+//            @ApiResponse(responseCode = "200", description = "Пользователь добавлен",
+//                    content = {@Content(mediaType = "application/json",
+//                            schema = @Schema(implementation = CreateClientUserDto.class))}),
+//            @ApiResponse(responseCode = "400", description = "Неверный запрос",
+//                    content = @Content),
+//            @ApiResponse(responseCode = "404", description = "Пользователь не добавлен",
+//                    content = @Content)})
+//    @PostMapping("/client/")
+//    public void add(@RequestBody CreateClientUserDto createClientUserDto) {
+//        userService.createClientUser(createClientUserDto);
+//    }
 }

@@ -16,5 +16,5 @@ public interface ClientRepository extends JpaRepository<ClientEntity, Long> {
     Optional<ClientEntity> findById(Long id);
 
     // @Query(value = "SELECT ce FROM ClientEntity ce where ce.email=:email")
-    Optional<ClientEntity> getByEmail(String email);
+    Optional<ClientEntity> findByEmail(String email);
 }

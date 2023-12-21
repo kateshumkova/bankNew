@@ -3,11 +3,13 @@ package com.example.banknew.service.impl;
 import com.example.banknew.dtos.ClientDto;
 import com.example.banknew.entities.AccountEntity;
 import com.example.banknew.entities.ClientEntity;
+import com.example.banknew.entities.UserEntity;
 import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.ClientMapper;
 import com.example.banknew.repository.ClientRepository;
+import com.example.banknew.repository.UserRepository;
 import com.example.banknew.service.ClientService;
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -15,6 +17,7 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.OneToMany;
 
 
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.data.crossstore.ChangeSetPersister;
@@ -33,6 +36,7 @@ import java.util.Optional;
 public class ClientServiceImpl implements ClientService {
 
     private final ClientRepository clientRepository;
+    private final UserRepository userRepository;
     private final ClientMapper clientMapper;
 
     @Override
@@ -67,12 +71,16 @@ public class ClientServiceImpl implements ClientService {
         }
     }
 
+    @Transactional
     @Override
     public ClientDto createClient(ClientDto clientDto) {
-        Optional<ClientEntity> optClientEntity = clientRepository.getByEmail(clientDto.getEmail());
+        Optional<ClientEntity> optClientEntity = clientRepository.findByEmail(clientDto.getEmail());
         if (optClientEntity.isEmpty()) {
             ClientEntity clientEntity = clientMapper.toEntity(clientDto);
             clientEntity.setCreatedAt(Instant.now());
+            userRepository.findByUsername(clientDto.getEmail()).ifPresentOrElse(clientEntity::setUser, () -> {
+                throw new NotFoundException("No such username-email");
+            });
             ClientEntity savedClient = clientRepository.save(clientEntity);
             log.info("Created and saved client with ID= {}", savedClient.getId());
             return clientMapper.toDto(savedClient);

@@ -44,7 +44,8 @@
       </column>
 
       <column name="user_id" type="bigint">
-        <constraints nullable="true" foreignKeyName="fk_clients_users" references="users(id)"/>
+        <constraints nullable="true" />
+                     <!--foreignKeyName="fk_clients_users" references="users(id)"/> -->
 
       </column>
 
