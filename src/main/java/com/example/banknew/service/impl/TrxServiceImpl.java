@@ -12,6 +12,7 @@ import com.example.banknew.repository.ClientRepository;
 import com.example.banknew.repository.TrxRepository;
 import com.example.banknew.repository.UserRepository;
 import com.example.banknew.service.TrxService;
+import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -52,40 +53,55 @@ public class TrxServiceImpl implements TrxService {
     }
 
     @Override
-    public List<TrxDto> findByAccountId(Long accountId, Authentication authentication) {
-        List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
-        if (trxEntities.isEmpty()) {
-            throw new NotFoundException("There is no trx for this account" + accountId);
+    public List<TrxDto> findByAccountId(Long accountId, Authentication authentication, HttpServletRequest request) {
+        // HttpServletRequest request) {
+        //     if (request.isUserInRole("ROLE_ADMIN")) {
+        // String name = authentication.getName(); //mary
+        //  }
+//        var author = authentication.getAuthorities();
+//        var cred = authentication.getCredentials();
+//        var details = authentication.getDetails();
+//        var principal = authentication.getPrincipal();
+//        var authClass = authentication.getClass();
+        Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
+        if (optUserEntity.isEmpty()) {
+            throw new NotFoundException("There is no such username" + authentication.getName());
         } else {
-         /*  //поменять местами
-          String name = authentication.getName(); //mary
-            Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
-            if (optUserEntity.isEmpty()) {
-                throw new NotFoundException("There is no such username" + authentication.getName());
-            } else {
+            if (//authentication.getAuthorities() == 3
+                    request.isUserInRole("ROLE_USER")) {
                 UserEntity userEntity = optUserEntity.get();
-                Optional<ClientEntity> optClientEntity = clientRepository.findByUserEntity(userEntity);
+                Optional<ClientEntity> optClientEntity = clientRepository.findByEmail(userEntity.getUsername());
                 if (optClientEntity.isEmpty()) {
-                    throw new NotFoundException("There is no client with such username" + authentication.getName());
+                    throw new NotFoundException("There is no client with such username-email" + authentication.getName());
                 } else {
 
+                    List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
+                    if (trxEntities.isEmpty()) {
+                        throw new NotFoundException("There is no trx for this account" + accountId);
+                    } else {
+                        return trxEntities.stream()
+                                .map(trxMapper::toDto)
+                                .toList();
+                    }
+                }
+            } else {
 
-//            var author = authentication.getAuthorities();
-//            var cred = authentication.getCredentials();
-//            var details = authentication.getDetails();
-//            var principal = authentication.getPrincipal();
-//            var authClass = authentication.getClass();
-       */
-            return trxEntities.stream()
-                    .map(trxMapper::toDto)
-                    .toList();
+              //  request.isUserInRole("ROLE_ADMIN") || request.isUserInRole("ROLE_MANAGER") // if (authentication.getAuthorities()==1 || authentication.getAuthorities()==2)
+                List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
+                if (trxEntities.isEmpty()) {
+                    throw new NotFoundException("There is no trx for this account" + accountId);
+                } else {
+                    return trxEntities.stream()
+                            .map(trxMapper::toDto)
+                            .toList();
+                }
+            }
         }
     }
-    //}
-    // }
+
 
     @Override
-    public List<TrxDto> findByStatus(int status) {
+    public List<TrxDto> findByStatus(Status status) {
         List<TrxEntity> trxEntities = trxRepository.findByStatus(status);
         if (trxEntities.isEmpty()) {
             throw new NotFoundException("There is no trx with status" + status);

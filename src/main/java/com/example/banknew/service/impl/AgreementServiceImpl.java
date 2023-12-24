@@ -137,7 +137,6 @@ public class AgreementServiceImpl implements AgreementService {
             throw new NotFoundException("Some value is empty");
         }
 
-
         ProductEntity productEntity = optProductEntity.get();
 
         //validation of sum and duration
