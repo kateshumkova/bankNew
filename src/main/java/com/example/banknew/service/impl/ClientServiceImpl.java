@@ -1,9 +1,8 @@
 package com.example.banknew.service.impl;
 
 import com.example.banknew.dtos.ClientDto;
-import com.example.banknew.entities.AccountEntity;
+import com.example.banknew.dtos.CreateClientRequest;
 import com.example.banknew.entities.ClientEntity;
-import com.example.banknew.entities.UserEntity;
 import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
@@ -11,20 +10,14 @@ import com.example.banknew.mappers.ClientMapper;
 import com.example.banknew.repository.ClientRepository;
 import com.example.banknew.repository.UserRepository;
 import com.example.banknew.service.ClientService;
-import jakarta.persistence.CascadeType;
-import jakarta.persistence.Column;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.OneToMany;
 
 
 import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.springframework.data.crossstore.ChangeSetPersister;
 import org.springframework.stereotype.Service;
 
 import java.time.Instant;
-import java.util.Date;
 import java.util.List;
 import java.util.Optional;
 
@@ -73,19 +66,20 @@ public class ClientServiceImpl implements ClientService {
 
     @Transactional
     @Override
-    public ClientDto createClient(ClientDto clientDto) {
-        Optional<ClientEntity> optClientEntity = clientRepository.findByEmail(clientDto.getEmail());
+    public ClientDto createClient(CreateClientRequest creationRequestClientDto) {
+        //сначала создается юзер, потом клиент
+        Optional<ClientEntity> optClientEntity = clientRepository.findByEmail(creationRequestClientDto.getEmail());
         if (optClientEntity.isEmpty()) {
-            ClientEntity clientEntity = clientMapper.toEntity(clientDto);
+            ClientEntity clientEntity = clientMapper.toEntity(creationRequestClientDto);
             clientEntity.setCreatedAt(Instant.now());
-            userRepository.findByUsername(clientDto.getEmail()).ifPresentOrElse(clientEntity::setUser, () -> {
-                throw new NotFoundException("No such username-email");
+            userRepository.findByUsername(creationRequestClientDto.getEmail()).ifPresentOrElse(clientEntity::setUser, () -> {
+                throw new NotFoundException("No such username-email in repository");
             });
             ClientEntity savedClient = clientRepository.save(clientEntity);
             log.info("Created and saved client with ID= {}", savedClient.getId());
             return clientMapper.toDto(savedClient);
         } else {
-            throw new ValidationException("Client cannot be created, email " + clientDto.getEmail() + " is occupied");
+            throw new ValidationException("Client cannot be created, email " + creationRequestClientDto.getEmail() + " is occupied");
         }
     }
 

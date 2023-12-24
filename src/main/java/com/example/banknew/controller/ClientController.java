@@ -1,6 +1,7 @@
 package com.example.banknew.controller;
 
 import com.example.banknew.dtos.ClientDto;
+import com.example.banknew.dtos.CreateClientRequest;
 import com.example.banknew.entities.ClientEntity;
 import com.example.banknew.service.ClientService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -10,7 +11,6 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
-import org.apache.tomcat.util.net.openssl.ciphers.Authentication;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.security.core.context.SecurityContext;
 import org.springframework.web.bind.annotation.*;
@@ -81,8 +81,8 @@ public class ClientController {
                     content = @Content)})
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MANAGER')")
     @PostMapping("/")
-    public ClientDto add(@RequestBody ClientDto clientDto) {
-        return clientService.createClient(clientDto);
+    public ClientDto add(@RequestBody CreateClientRequest creationRequestClientDto) {
+        return clientService.createClient(creationRequestClientDto);
     }
 
     @Operation(summary = "Обновить данные клиента")
