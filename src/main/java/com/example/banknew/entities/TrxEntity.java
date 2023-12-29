@@ -13,12 +13,12 @@ import java.time.Instant;
 
 @Getter
 @Setter
-@Entity(name="trx")
+@Entity(name = "trx")
 public class TrxEntity {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    @Column(name="id")
+    @Column(name = "id")
     private Long id;
 
     @ManyToOne
@@ -26,22 +26,22 @@ public class TrxEntity {
     private AccountEntity account;
 
     @Enumerated(EnumType.STRING)
-    @Column (name ="type")
-    private TrxType type;
+    @Column(name = "type")
+    private TrxType trxType;
 
     @Enumerated(EnumType.STRING)
-    @Column (name ="status")
+    @Column(name = "status")
     private Status status;
 
     @PositiveOrZero(message = "Amount of trx must be greater than 0!")
-    @Column (name ="amount")
+    @Column(name = "amount")
     private BigDecimal amount;
 
-    @Column (name ="description")
+    @Column(name = "description")
     private String description;
 
     @CreationTimestamp
-    @Column (name ="created_at")
+    @Column(name = "created_at")
     private Instant createdAt;
 
 }

@@ -63,30 +63,55 @@ public class TrxServiceImpl implements TrxService {
 //        var details = authentication.getDetails();
 //        var principal = authentication.getPrincipal();
 //        var authClass = authentication.getClass();
-        Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
-        if (optUserEntity.isEmpty()) {
-            throw new NotFoundException("There is no such username" + authentication.getName());
-        } else {
-            if (//authentication.getAuthorities() == 3
-                    request.isUserInRole("ROLE_USER")) {
-                UserEntity userEntity = optUserEntity.get();
-                Optional<ClientEntity> optClientEntity = clientRepository.findByEmail(userEntity.getUsername());
-                if (optClientEntity.isEmpty()) {
-                    throw new NotFoundException("There is no client with such username-email" + authentication.getName());
-                } else {
 
-                    List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
-                    if (trxEntities.isEmpty()) {
-                        throw new NotFoundException("There is no trx for this account" + accountId);
-                    } else {
-                        return trxEntities.stream()
-                                .map(trxMapper::toDto)
-                                .toList();
-                    }
-                }
+        if (authentication.getAuthorities().stream()
+                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+            Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
+            UserEntity userEntity = optUserEntity.get();
+            ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
+                    .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
+
+//проверить принадлежат ли клиенту аккаунт checkClient
+            List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
+            if (trxEntities.isEmpty()) {
+                throw new NotFoundException("There is no trx for this account" + accountId);
             } else {
+                return trxEntities.stream()
+                        .map(trxMapper::toDto)
+                        .toList();
+            }
+        }
+            //isPresent
+            //var role = authentication.getAuthorities().stream()
+//                .filter(r -> r.getAuthority().equals("ROLE_USER"))
+//                .findFirst(); //возращает первый и оборачивает в опш, проверить на наличие
+            // Optional<RoleEntity> role =  authentication.getAuthorities().stream()
+            //         .anyMatch(r -> r.getAuthority().equals("ROLE_USER"));
+            //equalsIgnoreCase
+            //private boolean checkrole (String roleName, authorities) проверка
+//            if (optUserEntity.isEmpty()) {
+//                throw new NotFoundException("There is no such username" + authentication.getName());
+//            } else {
+//                if (//authentication.getAuthorities() == 3
+//                        request.isUserInRole("ROLE_USER")) {
+//                    UserEntity userEntity = optUserEntity.get();
+//                    ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
+//                            .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
+//
+////проверить принадлежат ли клиенту аккаунт checkClient
+//                    List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
+//                    if (trxEntities.isEmpty()) {
+//                        throw new NotFoundException("There is no trx for this account" + accountId);
+//                    } else {
+//                        return trxEntities.stream()
+//                                .map(trxMapper::toDto)
+//                                .toList();
+//                    }
+//                }
+//            }
+            else{
 
-              //  request.isUserInRole("ROLE_ADMIN") || request.isUserInRole("ROLE_MANAGER") // if (authentication.getAuthorities()==1 || authentication.getAuthorities()==2)
+                //  request.isUserInRole("ROLE_ADMIN") || request.isUserInRole("ROLE_MANAGER") // if (authentication.getAuthorities()==1 || authentication.getAuthorities()==2)
                 List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
                 if (trxEntities.isEmpty()) {
                     throw new NotFoundException("There is no trx for this account" + accountId);
@@ -97,7 +122,7 @@ public class TrxServiceImpl implements TrxService {
                 }
             }
         }
-    }
+
 
 
     @Override
@@ -123,7 +148,7 @@ public class TrxServiceImpl implements TrxService {
         BigDecimal balanceBeforeTrx = accountEntity.getBalance();
 
         //если операция дебитовая  тип 1
-        if (trxEntity.getType() == TrxType.DEBIT) {
+        if (trxEntity.getTrxType() == TrxType.DEBIT) {
             accountEntity.setBalance(balanceBeforeTrx.add(trxDto.getAmount()));
         } else {
             //если операция кредитовая  тип 2
@@ -135,7 +160,8 @@ public class TrxServiceImpl implements TrxService {
             } else log.info("Balance is not enough to proceed the operation");
         }
         trxEntity.setAccount(accountEntity);
-
+        trxEntity.setStatus(Status.ACTIVE);
+        trxEntity.setTrxType(trxDto.getTrxType());
         AccountEntity savedAccountEntity = accountRepository.saveAndFlush(accountEntity);
         TrxEntity savedTrx = trxRepository.save(trxEntity);
         log.info("Created and saved Trx with ID= {}", savedTrx.getId());

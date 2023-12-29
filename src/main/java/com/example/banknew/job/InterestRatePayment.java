@@ -2,26 +2,21 @@ package com.example.banknew.job;
 
 import com.example.banknew.dtos.AgreementDto;
 import com.example.banknew.entities.AccountEntity;
-import com.example.banknew.entities.AgreementEntity;
-import com.example.banknew.entities.ProductEntity;
 import com.example.banknew.entities.TrxEntity;
 import com.example.banknew.enums.Status;
 import com.example.banknew.enums.TrxType;
 import com.example.banknew.mappers.AgreementMapper;
 import com.example.banknew.repository.AccountRepository;
-import com.example.banknew.repository.AgreementRepository;
 import com.example.banknew.repository.TrxRepository;
 import com.example.banknew.service.AccountService;
 import com.example.banknew.service.AgreementService;
 import jakarta.transaction.Transactional;
-import liquibase.integration.spring.SpringResourceAccessor;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
-import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -50,7 +45,7 @@ public class InterestRatePayment {
                 TrxEntity trxEntity = new TrxEntity();
                 trxEntity.setAccount(accountEntity);
                 trxEntity.setStatus(Status.ACTIVE);
-                trxEntity.setType(TrxType.DEBIT);
+                trxEntity.setTrxType(TrxType.DEBIT);
                 trxEntity.setDescription("Interest Rate Payout");
                 trxEntity.setAmount(interestRate);
                 TrxEntity savedTrxEntity = trxRepository.saveAndFlush(trxEntity);
