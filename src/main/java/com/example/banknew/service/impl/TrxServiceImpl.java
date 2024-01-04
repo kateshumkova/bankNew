@@ -5,12 +5,10 @@ import com.example.banknew.entities.*;
 import com.example.banknew.enums.Status;
 import com.example.banknew.enums.TrxType;
 import com.example.banknew.exception.NotFoundException;
+import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.AccountMapper;
 import com.example.banknew.mappers.TrxMapper;
-import com.example.banknew.repository.AccountRepository;
-import com.example.banknew.repository.ClientRepository;
-import com.example.banknew.repository.TrxRepository;
-import com.example.banknew.repository.UserRepository;
+import com.example.banknew.repository.*;
 import com.example.banknew.service.TrxService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -33,6 +31,37 @@ public class TrxServiceImpl implements TrxService {
     private final AccountMapper accountMapper;
     private final UserRepository userRepository;
     private final ClientRepository clientRepository;
+    private final AgreementRepository agreementRepository;
+
+    private List<TrxDto> returnListOfTrxForAccount(Long accountId) {
+        List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
+        if (trxEntities.isEmpty()) {
+            throw new NotFoundException("There is no trx for this account " + accountId);
+        } else {
+            return trxEntities.stream()
+                    .map(trxMapper::toDto)
+                    .toList();
+        }
+    }
+
+
+    public boolean checkOwner(Long accountId, Authentication authentication) {
+        // if (authentication.getAuthorities().stream()
+        //         .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+        Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
+        UserEntity userEntity = optUserEntity.get();
+        ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
+                .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
+        List<AgreementEntity> agreementEntities = agreementRepository.findByClientId(clientEntity.getId());
+        var listOfAccountId = agreementEntities.stream().map(ae -> ae.getAccount().getId()).toList();
+        if (listOfAccountId.contains(accountId)) {
+            //  if (agreementEntities != null && !agreementEntities.isEmpty()) {
+            return true;
+        } else {
+            log.info("This account belongs to other user");
+            return false;
+        }
+    }
 
     @Override
     public List<TrxDto> getAll() {
@@ -41,54 +70,102 @@ public class TrxServiceImpl implements TrxService {
                 .map(trxMapper::toDto)
                 .toList();
     }
+//правильно ли? ниже рабочие спагетти
+//    @Override
+//    public TrxDto getById(Long id, Authentication authentication) {
+//        if (authentication.getAuthorities().stream()
+//                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+//            Optional<TrxEntity> optTrxEntity = Optional.ofNullable(trxRepository.findById(id).orElseThrow(() -> new NotFoundException("Trx " + id + "is not found")));
+//            TrxEntity trxEntity = optTrxEntity.get();
+//            Long accountId = trxEntity.getAccount().getId();
+//            if (checkOwner(accountId, authentication)) {
+//                return trxMapper.toDto(optTrxEntity.get());
+//            } else {
+//                throw new NotFoundException("This account belongs to other user");
+//            }
+//
+//        } else {
+//            Optional<TrxEntity> optTrxEntity = Optional.ofNullable(trxRepository.findById(id).orElseThrow(() -> new NotFoundException("Trx " + id + "is not found")));
+//            return trxMapper.toDto(optTrxEntity.get());
+//        }
+//    }
 
     @Override
-    public TrxDto getById(Long id) {
-        Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
-        if (optTrxEntity.isPresent()) {
-            return trxMapper.toDto(optTrxEntity.get());
+    public TrxDto getById(Long id, Authentication authentication) {
+        if (authentication.getAuthorities().stream()
+                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+            Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
+            if (optTrxEntity.isPresent()) {
+                TrxEntity trxEntity = optTrxEntity.get();
+                Long accountId = trxEntity.getAccount().getId();
+                if (checkOwner(accountId, authentication)) {
+                    return trxMapper.toDto(optTrxEntity.get());
+                } else {
+                    throw new NotFoundException("This account belongs to other user");
+                }
+            } else {
+                throw new NotFoundException("Trx " + id + "is not found");
+            }
         } else {
-            throw new NotFoundException("Trx " + id + "is not found");
+            Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
+            if (optTrxEntity.isPresent()) {
+                return trxMapper.toDto(optTrxEntity.get());
+           } else {
+                throw new NotFoundException("Trx " + id + "is not found");
+            }
         }
     }
 
+
+    // .orElseThrow(() -> new UsernameNotFoundException(ErrorsMessage.NOT_FOUND_USER_MESSAGE + " with name: " + username));
     @Override
-    public List<TrxDto> findByAccountId(Long accountId, Authentication authentication, HttpServletRequest request) {
-        // HttpServletRequest request) {
-        //     if (request.isUserInRole("ROLE_ADMIN")) {
-        // String name = authentication.getName(); //mary
-        //  }
+    public List<TrxDto> findByAccountId(Long accountId, Authentication authentication) {
+        if (authentication.getAuthorities().stream()
+                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+            if (checkOwner(accountId, authentication)) {
+                return returnListOfTrxForAccount(accountId);
+            } else {
+                throw new NotFoundException("This account belongs to other user");
+            }
+        } else {
+            return returnListOfTrxForAccount(accountId);
+        }
+    }
+    // HttpServletRequest request) {
+    //     if (request.isUserInRole("ROLE_ADMIN")) {
+    // String name = authentication.getName(); //mary
+    //  }
 //        var author = authentication.getAuthorities();
 //        var cred = authentication.getCredentials();
 //        var details = authentication.getDetails();
 //        var principal = authentication.getPrincipal();
 //        var authClass = authentication.getClass();
 
-        if (authentication.getAuthorities().stream()
-                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
-            Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
-            UserEntity userEntity = optUserEntity.get();
-            ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
-                    .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
-
-//проверить принадлежат ли клиенту аккаунт checkClient
-            List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
-            if (trxEntities.isEmpty()) {
-                throw new NotFoundException("There is no trx for this account" + accountId);
-            } else {
-                return trxEntities.stream()
-                        .map(trxMapper::toDto)
-                        .toList();
-            }
-        }
-            //isPresent
-            //var role = authentication.getAuthorities().stream()
+//        if (authentication.getAuthorities().stream()
+//                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+//            Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
+//            UserEntity userEntity = optUserEntity.get();
+//            ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
+//                    .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
+//
+////проверить принадлежат ли клиенту аккаунт checkClient
+//            List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
+//            if (trxEntities.isEmpty()) {
+//                throw new NotFoundException("There is no trx for this account" + accountId);
+//            } else {
+//                return trxEntities.stream()
+//                        .map(trxMapper::toDto)
+//                        .toList();
+//            }
+//        }
+    //isPresent
+    //var role = authentication.getAuthorities().stream()
 //                .filter(r -> r.getAuthority().equals("ROLE_USER"))
 //                .findFirst(); //возращает первый и оборачивает в опш, проверить на наличие
-            // Optional<RoleEntity> role =  authentication.getAuthorities().stream()
-            //         .anyMatch(r -> r.getAuthority().equals("ROLE_USER"));
-            //equalsIgnoreCase
-            //private boolean checkrole (String roleName, authorities) проверка
+    // Optional<RoleEntity> role =  authentication.getAuthorities().stream()
+    //         .anyMatch(r -> r.getAuthority().equals("ROLE_USER"));
+    //equalsIgnoreCase
+    //private boolean checkrole (String roleName, authorities) проверка
 //            if (optUserEntity.isEmpty()) {
 //                throw new NotFoundException("There is no such username" + authentication.getName());
 //            } else {
@@ -109,20 +186,19 @@ public class TrxServiceImpl implements TrxService {
 //                    }
 //                }
 //            }
-            else{
-
-                //  request.isUserInRole("ROLE_ADMIN") || request.isUserInRole("ROLE_MANAGER") // if (authentication.getAuthorities()==1 || authentication.getAuthorities()==2)
-                List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
-                if (trxEntities.isEmpty()) {
-                    throw new NotFoundException("There is no trx for this account" + accountId);
-                } else {
-                    return trxEntities.stream()
-                            .map(trxMapper::toDto)
-                            .toList();
-                }
-            }
-        }
-
+//        else {
+//
+//            //  request.isUserInRole("ROLE_ADMIN") || request.isUserInRole("ROLE_MANAGER") // if (authentication.getAuthorities()==1 || authentication.getAuthorities()==2)
+//            List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
+//            if (trxEntities.isEmpty()) {
+//                throw new NotFoundException("There is no trx for this account" + accountId);
+//            } else {
+//                return trxEntities.stream()
+//                        .map(trxMapper::toDto)
+//                        .toList();
+//            }
+//        }
+//    }
 
 
     @Override
@@ -158,6 +234,7 @@ public class TrxServiceImpl implements TrxService {
             if (amountTrx.compareTo(balanceBeforeTrx) <= 0) {
                 accountEntity.setBalance(balanceBeforeTrx.subtract(trxDto.getAmount()));
             } else log.info("Balance is not enough to proceed the operation");
+            throw new ValidationException("Balance is not enough to proceed the operation");
         }
         trxEntity.setAccount(accountEntity);
         trxEntity.setStatus(Status.ACTIVE);

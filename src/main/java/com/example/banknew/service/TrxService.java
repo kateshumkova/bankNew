@@ -11,8 +11,8 @@ import java.util.List;
 
 public interface TrxService {
     List<TrxDto> getAll();
-    TrxDto getById(Long id);
-    List<TrxDto> findByAccountId(Long id, Authentication authentication, HttpServletRequest request);
+    TrxDto getById(Long id, Authentication authentication);
+    List<TrxDto> findByAccountId(Long id, Authentication authentication);
     List<TrxDto> findByStatus(Status status);
     TrxDto createTrx(TrxDto trxDto);
     TrxEntity updateTrx(Long id, TrxDto trxDto);
