@@ -34,7 +34,6 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public List<ClientDto> getAll() {
-
         return clientRepository.findAll().stream()
                 .map(clientMapper::toDto)
                 .toList();
@@ -43,13 +42,12 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public ClientDto getById(Long id) {
         Optional<ClientEntity> optClientEntity = clientRepository.findById(id);
-        if (optClientEntity.isPresent()) {
-            ClientEntity clientEntity = optClientEntity.get();
-            var user = clientEntity.getUser();
-            return clientMapper.toDto(optClientEntity.get());
-        } else {
+        if (optClientEntity.isEmpty()) {
             throw new NotFoundException("Client " + id + " is not found");
         }
+        ClientEntity clientEntity = optClientEntity.get();
+        var user = clientEntity.getUser();
+        return clientMapper.toDto(optClientEntity.get());
     }
 
     @Override
@@ -57,11 +55,10 @@ public class ClientServiceImpl implements ClientService {
         List<ClientEntity> clientEntities = clientRepository.findByLastName(lastName);
         if (clientEntities.isEmpty()) {
             throw new NotFoundException("Client with with lastName" + lastName + " is not found");
-        } else {
-            return clientEntities.stream()
-                    .map(clientMapper::toDto)
-                    .toList();
         }
+        return clientEntities.stream()
+                .map(clientMapper::toDto)
+                .toList();
     }
 
     @Transactional
@@ -86,33 +83,28 @@ public class ClientServiceImpl implements ClientService {
     @Override
     public ClientEntity updateClient(Long id, ClientDto clientDto) {
         Optional<ClientEntity> optClientEntity = clientRepository.findById(id);
-        if (optClientEntity.isPresent()) {
-            ClientEntity clientEntity = optClientEntity.get();
-            clientMapper.updateEntity(clientEntity, clientDto);
-            clientRepository.save(clientEntity);
-            log.info("Client with ID {} is updated", id);
-            return clientEntity;
+        if (optClientEntity.isEmpty()) {
+            throw new NotFoundException("Client " + id + " cannot be updated, id is not found");
         }
-        throw new NotFoundException("Client " + id + " cannot be updated, id is not found");
-
+        ClientEntity clientEntity = optClientEntity.get();
+        clientMapper.updateEntity(clientEntity, clientDto);
+        clientRepository.save(clientEntity);
+        log.info("Client with ID {} is updated", id);
+        return clientEntity;
     }
+
 
     @Override
     public void deleteClient(Long id) {
         Optional<ClientEntity> optClientEntity = clientRepository.findById(id);
-        if (optClientEntity.isPresent()) {
-            ClientEntity clientEntity = optClientEntity.get();
-            clientEntity.setStatus(Status.INACTIVE);
-            clientRepository.save(clientEntity);
-
-            //   clientRepository.deleteById(id);
-            return;
+        if (optClientEntity.isEmpty()) {
+            throw new NotFoundException("Client " + id + " is not found");
         }
-        throw new NotFoundException("Client " + id + " is not found");
+        ClientEntity clientEntity = optClientEntity.get();
+        clientEntity.setStatus(Status.INACTIVE);
+        clientRepository.save(clientEntity);
+
+        //   clientRepository.deleteById(id);
     }
-
 }
-
-
-
 

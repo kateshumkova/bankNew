@@ -84,8 +84,8 @@ public class TrxController {
             @ApiResponse(responseCode = "404", description = "Транзакция не совершена",
                     content = @Content)})
     @PostMapping("/")
-    public TrxDto add(@RequestBody TrxDto trxDto) {
-        return trxService.createTrx(trxDto);
+    public TrxDto add(@RequestBody TrxDto trxDto, Authentication authentication) {
+        return trxService.createTrx(trxDto, authentication);
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN')")

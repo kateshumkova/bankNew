@@ -13,8 +13,8 @@ public interface TrxService {
     List<TrxDto> getAll();
     TrxDto getById(Long id, Authentication authentication);
     List<TrxDto> findByAccountId(Long id, Authentication authentication);
-    List<TrxDto> findByStatus(Status status);
-    TrxDto createTrx(TrxDto trxDto);
+    List<TrxDto> findByStatus(Authentication authentication, Long accountId, Status status);
+    TrxDto createTrx(TrxDto trxDto,Authentication authentication);
     TrxEntity updateTrx(Long id, TrxDto trxDto);
     void deleteTrx(Long id);
 }
