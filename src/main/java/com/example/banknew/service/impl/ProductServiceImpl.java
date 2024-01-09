@@ -37,6 +37,7 @@ public class ProductServiceImpl implements ProductService {
         }
         return true;
     }
+
     @Override
     public List<ProductDto> getAll() {
 
@@ -48,11 +49,10 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDto getById(Long id) {
         Optional<ProductEntity> optProductEntity = productRepository.findById(id);
-        if (optProductEntity.isPresent()) {
-            return productMapper.toDto(optProductEntity.get());
-        } else {
+        if (optProductEntity.isEmpty()) {
             throw new NotFoundException("Product " + id + " is not found");
         }
+        return productMapper.toDto(optProductEntity.get());
     }
 
     @Override
@@ -60,11 +60,10 @@ public class ProductServiceImpl implements ProductService {
         List<ProductEntity> productEntities = productRepository.findByName(name);
         if (productEntities.isEmpty()) {
             throw new NotFoundException("Product with name" + name + " is not found");
-        } else {
-            return productEntities.stream()
-                    .map(productMapper::toDto)
-                    .toList();
         }
+        return productEntities.stream()
+                .map(productMapper::toDto)
+                .toList();
     }
 
     @Override
@@ -77,27 +76,25 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductEntity updateProduct(Long id, ProductDto productDto) {
         Optional<ProductEntity> optProductEntity = productRepository.findById(id);
-        if (optProductEntity.isPresent()) {
-            ProductEntity productEntity = optProductEntity.get();
-            productMapper.updateEntity(productEntity, productDto);
-            productRepository.save(productEntity);
-            log.info("Product with ID {} is updated", id);
-            return productEntity;
+        if (optProductEntity.isEmpty()) {
+            throw new NotFoundException("Product cannot be updated, " + id + " is not found");
         }
-        throw new NotFoundException("Product cannot be updated, " + id + " is not found");
-
+        ProductEntity productEntity = optProductEntity.get();
+        productMapper.updateEntity(productEntity, productDto);
+        productRepository.save(productEntity);
+        log.info("Product with ID {} is updated", id);
+        return productEntity;
     }
 
     @Override
     public void deleteProduct(Long id) {
         Optional<ProductEntity> optProductEntity = productRepository.findById(id);
-        if (optProductEntity.isPresent()) {
-           ProductEntity productEntity = optProductEntity.get();
-            productEntity.setStatus(Status.INACTIVE);
-            productRepository.save(productEntity);
-           // productRepository.deleteById(id);
-            return;
+        if (optProductEntity.isEmpty()) {
+            throw new NotFoundException("Product " + id + " is not found");
         }
-        throw new NotFoundException("Product " + id + " is not found");
+        ProductEntity productEntity = optProductEntity.get();
+        productEntity.setStatus(Status.INACTIVE);
+        productRepository.save(productEntity);
+        // productRepository.deleteById(id);
     }
 }

@@ -46,7 +46,10 @@ public class TrxServiceImpl implements TrxService {
 
     public boolean checkOwner(Long accountId, Authentication authentication) {
         Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
-        //добавить стандартную проверку
+
+        if (optUserEntity.isEmpty()) {
+            throw new NotFoundException("There is no client with such username-email" + authentication.getName());
+        }
         UserEntity userEntity = optUserEntity.get();
         ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
                 .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
@@ -91,213 +94,131 @@ public class TrxServiceImpl implements TrxService {
         if (authentication.getAuthorities().stream()
                 .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
             Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
-            if (optTrxEntity.isPresent()) {
-                TrxEntity trxEntity = optTrxEntity.get();
-                Long accountId = trxEntity.getAccount().getId();
-                if (checkOwner(accountId, authentication)) {
-                    return trxMapper.toDto(optTrxEntity.get());
-                } else {
-                    throw new NotFoundException("This account belongs to other user");
-                }
-            } else {
+            if (optTrxEntity.isEmpty()) {
                 throw new NotFoundException("Trx " + id + "is not found");
             }
+            TrxEntity trxEntity = optTrxEntity.get();
+            Long accountId = trxEntity.getAccount().getId();
+            if (!checkOwner(accountId, authentication)) {
+                throw new NotFoundException("This account belongs to other user");
+            }
+            return trxMapper.toDto(optTrxEntity.get());
+
         } else {
             Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
-            if (optTrxEntity.isPresent()) {
-                return trxMapper.toDto(optTrxEntity.get());
-            } else {
+            if (optTrxEntity.isEmpty()) {
                 throw new NotFoundException("Trx " + id + "is not found");
             }
+            return trxMapper.toDto(optTrxEntity.get());
         }
     }
 
-
-    // .orElseThrow(() -> new UsernameNotFoundException(ErrorsMessage.NOT_FOUND_USER_MESSAGE + " with name: " + username));
     @Override
     public List<TrxDto> findByAccountId(Long accountId, Authentication authentication) {
         if (authentication.getAuthorities().stream()
                 .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
-            if (checkOwner(accountId, authentication)) {
-                return returnListOfTrxForAccount(accountId);
-            } else {
+            if (!checkOwner(accountId, authentication)) {
                 throw new NotFoundException("This account belongs to other user");
             }
+            return returnListOfTrxForAccount(accountId);
         } else {
             return returnListOfTrxForAccount(accountId);
         }
     }
-    // HttpServletRequest request) {
-    //     if (request.isUserInRole("ROLE_ADMIN")) {
-    // String name = authentication.getName(); //mary
-    //  }
-//        var author = authentication.getAuthorities();
-//        var cred = authentication.getCredentials();
-//        var details = authentication.getDetails();
-//        var principal = authentication.getPrincipal();
-//        var authClass = authentication.getClass();
-
-//        if (authentication.getAuthorities().stream()
-//                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
-//            Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
-//            UserEntity userEntity = optUserEntity.get();
-//            ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
-//                    .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
-//
-////проверить принадлежат ли клиенту аккаунт checkClient
-//            List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
-//            if (trxEntities.isEmpty()) {
-//                throw new NotFoundException("There is no trx for this account" + accountId);
-//            } else {
-//                return trxEntities.stream()
-//                        .map(trxMapper::toDto)
-//                        .toList();
-//            }
-//        }
-    //isPresent
-    //var role = authentication.getAuthorities().stream()
-//                .filter(r -> r.getAuthority().equals("ROLE_USER"))
-//                .findFirst(); //возращает первый и оборачивает в опш, проверить на наличие
-    // Optional<RoleEntity> role =  authentication.getAuthorities().stream()
-    //         .anyMatch(r -> r.getAuthority().equals("ROLE_USER"));
-    //equalsIgnoreCase
-    //private boolean checkrole (String roleName, authorities) проверка
-//            if (optUserEntity.isEmpty()) {
-//                throw new NotFoundException("There is no such username" + authentication.getName());
-//            } else {
-//                if (//authentication.getAuthorities() == 3
-//                        request.isUserInRole("ROLE_USER")) {
-//                    UserEntity userEntity = optUserEntity.get();
-//                    ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
-//                            .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
-//
-////проверить принадлежат ли клиенту аккаунт checkClient
-//                    List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
-//                    if (trxEntities.isEmpty()) {
-//                        throw new NotFoundException("There is no trx for this account" + accountId);
-//                    } else {
-//                        return trxEntities.stream()
-//                                .map(trxMapper::toDto)
-//                                .toList();
-//                    }
-//                }
-//            }
-//        else {
-//
-//            //  request.isUserInRole("ROLE_ADMIN") || request.isUserInRole("ROLE_MANAGER") // if (authentication.getAuthorities()==1 || authentication.getAuthorities()==2)
-//            List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
-//            if (trxEntities.isEmpty()) {
-//                throw new NotFoundException("There is no trx for this account" + accountId);
-//            } else {
-//                return trxEntities.stream()
-//                        .map(trxMapper::toDto)
-//                        .toList();
-//            }
-//        }
-//    }
-
 
     @Override
     public List<TrxDto> findByStatus(Authentication authentication, Long accountId, Status status) {
 
         if (authentication.getAuthorities().stream()
                 .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
-            if (checkOwner(accountId, authentication)) {
-                List<TrxEntity> trxEntities = trxRepository.findByStatus(status);
-                if (trxEntities.isEmpty()) {
-                    throw new NotFoundException("There is no trx with status" + status);
-                } else {
-                    return trxEntities.stream()
-                            .map(trxMapper::toDto)
-                            .toList();
-                }
-
-            } else {
+            if (!checkOwner(accountId, authentication)) {
                 throw new NotFoundException("This account belongs to other user");
             }
+
+            List<TrxEntity> trxEntities = trxRepository.findByStatus(status);
+            if (trxEntities.isEmpty()) {
+                throw new NotFoundException("There is no trx with status" + status);
+            }
+            return trxEntities.stream()
+                    .map(trxMapper::toDto)
+                    .toList();
         } else {
             List<TrxEntity> trxEntities = trxRepository.findByStatus(status);
             if (trxEntities.isEmpty()) {
                 throw new NotFoundException("There is no trx with status" + status);
-            } else {
-                return trxEntities.stream()
-                        .map(trxMapper::toDto)
-                        .toList();
             }
+            return trxEntities.stream()
+                    .map(trxMapper::toDto)
+                    .toList();
         }
-
     }
 
     @Transactional
     @Override
     public TrxDto createTrx(TrxDto trxDto, Authentication authentication) {
-        if (authentication.getAuthorities().stream()
+        if (!authentication.getAuthorities().stream()
                 .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
-            if (checkOwner(trxDto.getAccountId(), authentication)) {
-                TrxEntity trxEntity = trxMapper.toEntity(trxDto);
-                Optional<AccountEntity> optAccountEntity = accountRepository.findById(trxDto.getAccountId());
-                if (optAccountEntity.isEmpty()) {
-                    throw new NotFoundException("There is no such account" + trxDto.getAccountId());
-                } else {
-                    AccountEntity accountEntity = optAccountEntity.get();
-                    BigDecimal balanceBeforeTrx = accountEntity.getBalance();
-
-                    //если операция дебитовая  тип 1
-                    if (trxEntity.getTrxType() == TrxType.DEBIT) {
-                        accountEntity.setBalance(balanceBeforeTrx.add(trxDto.getAmount()));
-                    } else {
-                        //если операция кредитовая  тип 2
-                        //проверка достаточен ли баланс для проведения операции списания
-
-                        BigDecimal amountTrx = trxDto.getAmount();
-                        if (amountTrx.compareTo(balanceBeforeTrx) <= 0) {
-                            accountEntity.setBalance(balanceBeforeTrx.subtract(trxDto.getAmount()));
-                        } else log.info("Balance is not enough to proceed the operation");
-                        throw new ValidationException("Balance is not enough to proceed the operation");
-                    }
-                    trxEntity.setAccount(accountEntity);
-                    trxEntity.setStatus(Status.ACTIVE);
-                    trxEntity.setTrxType(trxDto.getTrxType());
-                    AccountEntity savedAccountEntity = accountRepository.saveAndFlush(accountEntity);
-                    TrxEntity savedTrx = trxRepository.save(trxEntity);
-                    log.info("Created and saved Trx with ID= {}", savedTrx.getId());
-                    return trxMapper.toDto(savedTrx);
-                }
-
-            } else {
-                throw new NotFoundException("This account belongs to other user");
-            }
-        } else {
             throw new ValidationException("Trx can be created only by clients");
         }
+        if (!checkOwner(trxDto.getAccountId(), authentication)) {
+            throw new NotFoundException("This account belongs to other user");
+        }
+        TrxEntity trxEntity = trxMapper.toEntity(trxDto);
+        Optional<AccountEntity> optAccountEntity = accountRepository.findById(trxDto.getAccountId());
+        if (optAccountEntity.isEmpty()) {
+            throw new NotFoundException("There is no such account" + trxDto.getAccountId());
+        }
+        AccountEntity accountEntity = optAccountEntity.get();
+        BigDecimal balanceBeforeTrx = accountEntity.getBalance();
+
+        //если операция дебитовая  тип 1
+        if (trxEntity.getTrxType() == TrxType.DEBIT) {
+            accountEntity.setBalance(balanceBeforeTrx.add(trxDto.getAmount()));
+        } else {
+            //если операция кредитовая  тип 2
+            //проверка достаточен ли баланс для проведения операции списания
+
+            BigDecimal amountTrx = trxDto.getAmount();
+            if (amountTrx.compareTo(balanceBeforeTrx) <= 0) {
+                accountEntity.setBalance(balanceBeforeTrx.subtract(trxDto.getAmount()));
+            } else log.info("Balance is not enough to proceed the operation");
+            throw new ValidationException("Balance is not enough to proceed the operation");
+        }
+        trxEntity.setAccount(accountEntity);
+        trxEntity.setStatus(Status.ACTIVE);
+        trxEntity.setTrxType(trxDto.getTrxType());
+        AccountEntity savedAccountEntity = accountRepository.saveAndFlush(accountEntity);
+        TrxEntity savedTrx = trxRepository.save(trxEntity);
+        log.info("Created and saved Trx with ID= {}", savedTrx.getId());
+        return trxMapper.toDto(savedTrx);
     }
 
     @Override
     public TrxEntity updateTrx(Long id, TrxDto clientDto) {
         Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
-        if (optTrxEntity.isPresent()) {
-            TrxEntity trxEntity = optTrxEntity.get();
-            trxMapper.updateEntity(trxEntity, clientDto);
-            trxRepository.save(trxEntity);
-            log.info("Trx with ID {} is updated", id);
-            return trxEntity;
+        if (optTrxEntity.isEmpty()) {
+            throw new NotFoundException("Trx cannot be updated," + id + "is not found");
         }
-        throw new NotFoundException("Trx cannot be updated," + id + "is not found");
-
+        TrxEntity trxEntity = optTrxEntity.get();
+        trxMapper.updateEntity(trxEntity, clientDto);
+        trxRepository.save(trxEntity);
+        log.info("Trx with ID {} is updated", id);
+        return trxEntity;
     }
 
     @Override
     public void deleteTrx(Long id) {
         Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
-        if (optTrxEntity.isPresent()) {
-            // trxRepository.deleteById(id);
-            TrxEntity trxEntity = optTrxEntity.get();
-            trxEntity.setStatus(Status.INACTIVE);
-            trxRepository.save(trxEntity);
-            return;
+        if (optTrxEntity.isEmpty()) {
+            throw new NotFoundException("Trx" + id + "is " +
+                    "not found");
         }
-        throw new NotFoundException("Trx" + id + "is " +
-                "not found");
+        // trxRepository.deleteById(id);
+        TrxEntity trxEntity = optTrxEntity.get();
+        trxEntity.setStatus(Status.INACTIVE);
+        trxRepository.save(trxEntity);
     }
 
 }
+
+
