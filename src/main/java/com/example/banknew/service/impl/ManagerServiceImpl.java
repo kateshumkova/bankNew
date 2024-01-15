@@ -55,30 +55,34 @@ public class ManagerServiceImpl implements ManagerService {
 
     @Override
     public ManagerDto createManager(ManagerDto managerDto) {
+        Optional<ManagerEntity> optManager = managerRepository.findByEmail(managerDto.getEmail());
+        if (optManager.isPresent()) {
+            throw new NotFoundException("Email is occupied, new manager cannot be created");
+        }
         ManagerEntity savedManager = managerRepository.save(managerMapper.toEntity(managerDto));
         log.info("Created and saved manager with ID= {}", savedManager.getId());
         return managerMapper.toDto(savedManager);
     }
 
     @Override
-    public ManagerEntity updateManager(Long id, ManagerDto managerDto) {
+    public ManagerDto updateManager(Long id, ManagerDto managerDto) {
         Optional<ManagerEntity> optManagerEntity = managerRepository.findById(id);
         if (optManagerEntity.isEmpty()) {
-            throw new NotFoundException("Manager " + id + "cannot be updated, " +
+            throw new NotFoundException("Manager " + id + " cannot be updated, " +
                     "id is not found");
         }
         ManagerEntity managerEntity = optManagerEntity.get();
         managerMapper.updateEntity(managerEntity, managerDto);
         managerRepository.save(managerEntity);
         log.info("Manager with ID {} is updated", id);
-        return managerEntity;
+        return managerMapper.toDto(managerEntity);
     }
 
     @Override
     public void deleteManager(Long id) {
         Optional<ManagerEntity> optManagerEntity = managerRepository.findById(id);
         if (optManagerEntity.isEmpty()) {
-            throw new NotFoundException("Manager " + id + "not found");
+            throw new NotFoundException("Manager " + id + " not found");
         }
         //managerRepository.deleteById(id);
         ManagerEntity managerEntity = optManagerEntity.get();

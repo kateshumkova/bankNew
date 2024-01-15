@@ -14,4 +14,6 @@ public interface ManagerRepository extends JpaRepository<ManagerEntity, Long> {
 
     // @Query(value = "SELECT ce FROM ClientEntity ce where ce.email=:email")
     Optional<ManagerEntity> getByStatus(int status);
+
+    Optional<ManagerEntity> findByEmail(String email);
 }

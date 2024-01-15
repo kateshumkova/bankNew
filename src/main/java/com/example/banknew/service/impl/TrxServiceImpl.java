@@ -4,6 +4,7 @@ import com.example.banknew.dtos.TrxDto;
 import com.example.banknew.entities.*;
 import com.example.banknew.enums.Status;
 import com.example.banknew.enums.TrxType;
+import com.example.banknew.exception.AccessDeniedException;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.AccountMapper;
@@ -48,7 +49,7 @@ public class TrxServiceImpl implements TrxService {
         Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
 
         if (optUserEntity.isEmpty()) {
-            throw new NotFoundException("There is no client with such username-email" + authentication.getName());
+            throw new NotFoundException("There is no user with such username-email" + authentication.getName());
         }
         UserEntity userEntity = optUserEntity.get();
         ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
@@ -95,7 +96,7 @@ public class TrxServiceImpl implements TrxService {
                 .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
             Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
             if (optTrxEntity.isEmpty()) {
-                throw new NotFoundException("Trx " + id + "is not found");
+                throw new NotFoundException("Trx " + id + " is not found");
             }
             TrxEntity trxEntity = optTrxEntity.get();
             Long accountId = trxEntity.getAccount().getId();
@@ -104,12 +105,18 @@ public class TrxServiceImpl implements TrxService {
             }
             return trxMapper.toDto(optTrxEntity.get());
 
-        } else {
+        } else if (authentication.getAuthorities().stream()
+                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_MANAGER")) || authentication.getAuthorities().stream()
+                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_ADMIN"))) {
+            //access denied добавить в эксепшн если authentication.getAuthorities() is null
             Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
             if (optTrxEntity.isEmpty()) {
-                throw new NotFoundException("Trx " + id + "is not found");
+                throw new NotFoundException("Trx " + id + " is not found");
             }
             return trxMapper.toDto(optTrxEntity.get());
+        } else {
+            throw new AccessDeniedException("No such role");
+
         }
     }
 
@@ -194,7 +201,7 @@ public class TrxServiceImpl implements TrxService {
     }
 
     @Override
-    public TrxEntity updateTrx(Long id, TrxDto clientDto) {
+    public TrxDto updateTrx(Long id, TrxDto clientDto) {
         Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
         if (optTrxEntity.isEmpty()) {
             throw new NotFoundException("Trx cannot be updated," + id + "is not found");
@@ -203,7 +210,7 @@ public class TrxServiceImpl implements TrxService {
         trxMapper.updateEntity(trxEntity, clientDto);
         trxRepository.save(trxEntity);
         log.info("Trx with ID {} is updated", id);
-        return trxEntity;
+        return trxMapper.toDto(trxEntity);
     }
 
     @Override

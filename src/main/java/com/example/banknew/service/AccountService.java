@@ -11,6 +11,6 @@ public interface AccountService {
     AccountDto getById(Long id);
     List<AccountDto> findByName(String name);
     AccountEntity createAccount();
-    AccountEntity updateAccount(Long id, AccountDto accountDto);
+    AccountDto updateAccount(Long id, AccountDto accountDto);
     void deleteAccount(Long id);
 }

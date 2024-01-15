@@ -96,7 +96,7 @@ public class ClientController {
                     content = @Content)})
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MANAGER')")
     @PutMapping("/{id}")
-    public ClientEntity update(@Parameter(description = "id клиента, которого необходимо обновить", example = "2") @PathVariable Long id, @RequestBody ClientDto clientDto) {
+    public ClientDto update(@Parameter(description = "id клиента, которого необходимо обновить", example = "2") @PathVariable Long id, @RequestBody ClientDto clientDto) {
         return clientService.updateClient(id, clientDto);
     }
 

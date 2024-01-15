@@ -97,7 +97,7 @@ public class AccountController {
                     content = @Content)})
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MANAGER')")
     @PutMapping("/{id}")
-    public AccountEntity update(@Parameter(description = "id счета, который надо обновить", example = "2") @PathVariable Long id, @RequestBody AccountDto accountDto) {
+    public AccountDto update(@Parameter(description = "id счета, который надо обновить", example = "2") @PathVariable Long id, @RequestBody AccountDto accountDto) {
 
         return accountService.updateAccount(id, accountDto);
     }

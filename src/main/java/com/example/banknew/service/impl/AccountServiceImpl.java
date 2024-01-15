@@ -77,7 +77,7 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountEntity updateAccount(Long id, AccountDto accountDto) {
+    public AccountDto updateAccount(Long id, AccountDto accountDto) {
         Optional<AccountEntity> optAccountEntity = accountRepository.findById(id);
         if (optAccountEntity.isEmpty()) {
             throw new NotFoundException("Account id = " + id + " ,cannot be updated, id is not found");
@@ -86,14 +86,14 @@ public class AccountServiceImpl implements AccountService {
         accountMapper.updateEntity(accountEntity, accountDto);
         accountRepository.save(accountEntity);
         log.info("Account with ID {} is updated ", id);
-        return accountEntity;
+        return accountMapper.toDto(accountEntity);
     }
 
     @Override
     public void deleteAccount(Long id) {
         Optional<AccountEntity> optAccountEntity = accountRepository.findById(id);
         if (optAccountEntity.isEmpty()) {
-            throw new NotFoundException("Account id = " + id + " is not found");
+            throw new NotFoundException("Account id is not found");
         }
         AccountEntity accountEntity = optAccountEntity.get();
         accountEntity.setStatus(Status.INACTIVE);

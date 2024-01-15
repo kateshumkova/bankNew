@@ -59,7 +59,7 @@ public class ProductServiceImpl implements ProductService {
     public List<ProductDto> findByName(String name) {
         List<ProductEntity> productEntities = productRepository.findByName(name);
         if (productEntities.isEmpty()) {
-            throw new NotFoundException("Product with name" + name + " is not found");
+            throw new NotFoundException("Product with name " + name + " is not found");
         }
         return productEntities.stream()
                 .map(productMapper::toDto)
@@ -74,7 +74,7 @@ public class ProductServiceImpl implements ProductService {
     }
 
     @Override
-    public ProductEntity updateProduct(Long id, ProductDto productDto) {
+    public ProductDto updateProduct(Long id, ProductDto productDto) {
         Optional<ProductEntity> optProductEntity = productRepository.findById(id);
         if (optProductEntity.isEmpty()) {
             throw new NotFoundException("Product cannot be updated, " + id + " is not found");
@@ -83,7 +83,7 @@ public class ProductServiceImpl implements ProductService {
         productMapper.updateEntity(productEntity, productDto);
         productRepository.save(productEntity);
         log.info("Product with ID {} is updated", id);
-        return productEntity;
+        return productMapper.toDto(productEntity);
     }
 
     @Override

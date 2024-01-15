@@ -23,7 +23,6 @@ import java.util.Optional;
 
 
 @Service
-
 @RequiredArgsConstructor
 @Slf4j
 public class ClientServiceImpl implements ClientService {
@@ -54,7 +53,7 @@ public class ClientServiceImpl implements ClientService {
     public List<ClientDto> findByLastName(String lastName) {
         List<ClientEntity> clientEntities = clientRepository.findByLastName(lastName);
         if (clientEntities.isEmpty()) {
-            throw new NotFoundException("Client with with lastName" + lastName + " is not found");
+            throw new NotFoundException("Client with lastName " + lastName + " is not found");
         }
         return clientEntities.stream()
                 .map(clientMapper::toDto)
@@ -81,7 +80,7 @@ public class ClientServiceImpl implements ClientService {
     }
 
     @Override
-    public ClientEntity updateClient(Long id, ClientDto clientDto) {
+    public ClientDto updateClient(Long id, ClientDto clientDto) {
         Optional<ClientEntity> optClientEntity = clientRepository.findById(id);
         if (optClientEntity.isEmpty()) {
             throw new NotFoundException("Client " + id + " cannot be updated, id is not found");
@@ -90,7 +89,7 @@ public class ClientServiceImpl implements ClientService {
         clientMapper.updateEntity(clientEntity, clientDto);
         clientRepository.save(clientEntity);
         log.info("Client with ID {} is updated", id);
-        return clientEntity;
+        return clientMapper.toDto(clientEntity);
     }
 
 

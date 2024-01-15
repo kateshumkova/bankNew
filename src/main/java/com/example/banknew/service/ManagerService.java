@@ -11,7 +11,7 @@ public interface ManagerService {
     ManagerDto getById(Long id);
     List<ManagerDto> findByLastName(String lastName);
     ManagerDto createManager(ManagerDto managerDto);
-    ManagerEntity updateManager(Long id, ManagerDto managerDto);
+    ManagerDto updateManager(Long id, ManagerDto managerDto);
     void deleteManager(Long id);
 
 }

@@ -97,8 +97,9 @@ public class ProductController {
             @ApiResponse(responseCode = "404", description = "Данные продукта не обновлены",
                     content = @Content)})
     @PutMapping("/{id}")
-    public ProductEntity update(@Parameter(description = "id продукта, который надо обновить", example = "2") @PathVariable Long id, @RequestBody ProductDto productDto) {
+    public ProductDto update(@Parameter(description = "id продукта, который надо обновить", example = "2") @PathVariable Long id, @RequestBody ProductDto productDto) {
         return productService.updateProduct(id, productDto);
+        //todo mapper to dto
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MANAGER')")

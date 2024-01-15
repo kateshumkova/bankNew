@@ -13,7 +13,7 @@ public interface ProductService {
     ProductDto getById(Long id);
     List<ProductDto> findByName(String name);
     ProductDto createProduct(ProductDto productDto);
-    ProductEntity updateProduct(Long id, ProductDto productDto);
+    ProductDto updateProduct(Long id, ProductDto productDto);
     void deleteProduct(Long id);
     boolean validateOptProduct(Optional<ProductEntity> optProductEntity);
 

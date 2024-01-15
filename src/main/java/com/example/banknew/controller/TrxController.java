@@ -99,7 +99,7 @@ public class TrxController {
             @ApiResponse(responseCode = "404", description = "Данные транзацкии не обновлены",
                     content = @Content)})
     @PutMapping("/{id}")
-    public TrxEntity update(@Parameter(description = "id транзакции, которую надо обновить", example = "2")
+    public TrxDto update(@Parameter(description = "id транзакции, которую надо обновить", example = "2")
                             @PathVariable Long id, @RequestBody TrxDto trxDto) {
         return trxService.updateTrx(id, trxDto);
     }

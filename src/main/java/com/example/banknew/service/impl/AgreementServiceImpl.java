@@ -2,6 +2,7 @@ package com.example.banknew.service.impl;
 
 import com.example.banknew.dtos.*;
 import com.example.banknew.entities.*;
+import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.*;
@@ -51,7 +52,7 @@ public class AgreementServiceImpl implements AgreementService {
     }
 
     @Override
-    public AgreementDto getById(Long id) {
+    public AgreementDto findById(Long id) {
         Optional<AgreementEntity> optAgreementEntity = agreementRepository.findById(id);
         if (optAgreementEntity.isEmpty()) {
             log.info("Agreement id ={} is not found", id);
@@ -74,10 +75,10 @@ public class AgreementServiceImpl implements AgreementService {
 
     @Override
     public List<AgreementDto> findAllActive() {
-        List<AgreementEntity> agreementEntities = agreementRepository.findByStatus(1);
+        List<AgreementEntity> agreementEntities = agreementRepository.findByStatus(ACTIVE.ordinal());
         if (agreementEntities.isEmpty()) {
-            log.info("There is no active Agreements");
-            throw new NotFoundException("There is no active Agreements");
+            log.info("There are no active Agreements");
+            throw new NotFoundException("There are no active Agreements");
         }
         return agreementEntities.stream()
                 .map(agreementMapper::toDto)
@@ -85,15 +86,13 @@ public class AgreementServiceImpl implements AgreementService {
     }
 
     @Override
-    public List<AgreementDto> findByAccountId(Long id) {
-        List<AgreementEntity> agreementEntities = agreementRepository.findByAccountId(id);
-        if (agreementEntities.isEmpty()) {
+    public AgreementDto findByAccountId(Long id) {
+        Optional<AgreementEntity> optAgreementEntity = Optional.ofNullable(agreementRepository.findByAccountId(id));
+        if (optAgreementEntity.isEmpty()) {
             log.info("There is no Agreement with account id ={}", id);
             throw new NotFoundException("Agreement for this account id doesn't exist");
         }
-        return agreementEntities.stream()
-                .map(agreementMapper::toDto)
-                .toList();
+        return agreementMapper.toDto(optAgreementEntity.get());
     }
 
     @Override
@@ -106,15 +105,13 @@ public class AgreementServiceImpl implements AgreementService {
         return agreementEntities.stream()
                 .map(agreementMapper::toDto)
                 .toList();
-
     }
 
     @Override
     public List<AgreementDto> findByManagerId(Long id) {
         List<AgreementEntity> agreementEntities = agreementRepository.findByManagerId(id);
         if (agreementEntities.isEmpty()) {
-            throw new NotFoundException("There are no Agreements with this manager id"
-                    + id);
+            throw new NotFoundException("There are no Agreements with this manager id");
         }
         return agreementEntities.stream()
                 .map(agreementMapper::toDto)
@@ -177,16 +174,16 @@ public class AgreementServiceImpl implements AgreementService {
 
 
     @Override
-    public AgreementEntity updateAgreement(Long id, AgreementDto clientDto) {
+    public AgreementDto updateAgreement(Long id, AgreementDto agreementDto) {
         Optional<AgreementEntity> optAgreementEntity = agreementRepository.findById(id);
         if (optAgreementEntity.isEmpty()) {
             throw new NotFoundException("Agreement cannot be updated, " + id + " is not found");
         }
-        AgreementEntity clientEntity = optAgreementEntity.get();
-        agreementMapper.updateEntity(clientEntity, clientDto);
-        agreementRepository.save(clientEntity);
+        AgreementEntity agreementEntity = optAgreementEntity.get();
+        agreementMapper.updateEntity(agreementEntity, agreementDto);
+        agreementRepository.save(agreementEntity);
         log.info("Agreement with ID {} is updated ", id);
-        return clientEntity;
+        return agreementMapper.toDto(agreementEntity);
     }
 
     @Transactional
