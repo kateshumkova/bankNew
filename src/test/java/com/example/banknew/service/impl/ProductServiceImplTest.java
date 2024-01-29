@@ -3,6 +3,7 @@ package com.example.banknew.service.impl;
 import com.example.banknew.dtos.ProductDto;
 import com.example.banknew.dtos.TrxDto;
 import com.example.banknew.entities.ProductEntity;
+import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.ProductMapper;
@@ -85,14 +86,25 @@ class ProductServiceImplTest {
         ProductDto actual = productService.updateProduct(1L, new ProductDto());
 
         //проверка результата
-        verify(productMapper,atLeast(1)).updateEntity(any(), any());
+        verify(productMapper, atLeast(1)).updateEntity(any(), any());
         verify(productRepository).save(any());
-       // assertNotNull(actual);
+        // assertNotNull(actual);
     }
 
     @Test
     void testDeleteProduct_shouldNotFoundException_ifEmptyProduct() {
         NotFoundException exception = assertThrows(NotFoundException.class, () -> productService.deleteProduct(1L));
         assertEquals("Product 1 is not found", exception.getMessage());
+    }
+
+    @Test
+    void testDeleteProduct_shouldSucceed_ifPresentProduct() {
+        ProductEntity productEntity = new ProductEntity();
+        when(productRepository.findById(any())).thenReturn(Optional.of(productEntity));
+
+        productService.deleteProduct(1L);
+
+        verify(productRepository, atLeast(1)).save(any());
+        assertEquals(productEntity.getStatus(), Status.INACTIVE);
     }
 }

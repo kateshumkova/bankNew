@@ -1,5 +1,6 @@
 package com.example.banknew.controller;
 
+import com.example.banknew.aspect.UserAccess;
 import com.example.banknew.dtos.ClientDto;
 import com.example.banknew.dtos.CreateClientRequest;
 import com.example.banknew.entities.ClientEntity;
@@ -35,7 +36,8 @@ public class ClientController {
                     content = @Content)})
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MANAGER')")
     @GetMapping("/")
-    public List<ClientDto> getAll(SecurityContext context) {
+
+    public List<ClientDto> getAll() {
         List<ClientDto> clients = clientService.getAll();
         return clients;
     }

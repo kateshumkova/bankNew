@@ -33,7 +33,9 @@ public class ClientServiceImpl implements ClientService {
 
     @Override
     public List<ClientDto> getAll() {
+        log.info("вызов метода getAll");
         return clientRepository.findAll().stream()
+
                 .map(clientMapper::toDto)
                 .toList();
     }

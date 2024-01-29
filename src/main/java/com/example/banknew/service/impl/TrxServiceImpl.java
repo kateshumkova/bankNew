@@ -1,5 +1,6 @@
 package com.example.banknew.service.impl;
 
+import com.example.banknew.aspect.UserAccess;
 import com.example.banknew.dtos.TrxDto;
 import com.example.banknew.entities.*;
 import com.example.banknew.enums.Status;
@@ -10,6 +11,7 @@ import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.AccountMapper;
 import com.example.banknew.mappers.TrxMapper;
 import com.example.banknew.repository.*;
+import com.example.banknew.service.AuthService;
 import com.example.banknew.service.TrxService;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.transaction.Transactional;
@@ -33,6 +35,7 @@ public class TrxServiceImpl implements TrxService {
     private final UserRepository userRepository;
     private final ClientRepository clientRepository;
     private final AgreementRepository agreementRepository;
+    private final AuthService authService;
 
     private List<TrxDto> returnListOfTrxForAccount(Long accountId) {
         List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
@@ -45,7 +48,7 @@ public class TrxServiceImpl implements TrxService {
     }
 
 
-    public boolean checkOwner(Long accountId, Authentication authentication) {
+    private boolean checkOwner(Long accountId, Authentication authentication) {
         Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
 
         if (optUserEntity.isEmpty()) {
@@ -92,8 +95,12 @@ public class TrxServiceImpl implements TrxService {
 
     @Override
     public TrxDto getById(Long id, Authentication authentication) {
-        if (authentication.getAuthorities().stream()
-                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+        if (!authService.checkRole(authentication, "ROLE_USER")
+                || !authService.checkRole(authentication, "ROLE_MANAGER")
+                || !authService.checkRole(authentication, "ROLE_ADMIN")) {
+            throw new AccessDeniedException("Access with such role is impossible");
+        }
+        if (authService.checkRole(authentication,"ROLE_USER")) {
             Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
             if (optTrxEntity.isEmpty()) {
                 throw new NotFoundException("Trx " + id + " is not found");
@@ -105,39 +112,35 @@ public class TrxServiceImpl implements TrxService {
             }
             return trxMapper.toDto(optTrxEntity.get());
 
-        } else if (authentication.getAuthorities().stream()
-                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_MANAGER")) || authentication.getAuthorities().stream()
-                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_ADMIN"))) {
+        } else {
             //access denied добавить в эксепшн если authentication.getAuthorities() is null
             Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
             if (optTrxEntity.isEmpty()) {
                 throw new NotFoundException("Trx " + id + " is not found");
             }
             return trxMapper.toDto(optTrxEntity.get());
-        } else {
-            throw new AccessDeniedException("No such role");
-
         }
     }
 
     @Override
     public List<TrxDto> findByAccountId(Long accountId, Authentication authentication) {
-        if (authentication.getAuthorities().stream()
-                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+        if (authService.checkRole(authentication, "ROLE_USER")) {
             if (!checkOwner(accountId, authentication)) {
                 throw new NotFoundException("This account belongs to other user");
             }
             return returnListOfTrxForAccount(accountId);
-        } else {
+        } else if (authService.checkRole(authentication, "ROLE_MANAGER")
+                || authService.checkRole(authentication, "ROLE_ADMIN")) {
             return returnListOfTrxForAccount(accountId);
+        } else {
+            throw new AccessDeniedException("Access with such role is impossible");
         }
     }
 
     @Override
     public List<TrxDto> findByStatus(Authentication authentication, Long accountId, Status status) {
 
-        if (authentication.getAuthorities().stream()
-                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+        if (authService.checkRole(authentication, "ROLE_USER")) {
             if (!checkOwner(accountId, authentication)) {
                 throw new NotFoundException("This account belongs to other user");
             }
@@ -162,9 +165,9 @@ public class TrxServiceImpl implements TrxService {
 
     @Transactional
     @Override
+    @UserAccess
     public TrxDto createTrx(TrxDto trxDto, Authentication authentication) {
-        if (!authentication.getAuthorities().stream()
-                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
+        if (!authService.checkRole(authentication, "ROLE_USER")) {
             throw new ValidationException("Trx can be created only by clients");
         }
         if (!checkOwner(trxDto.getAccountId(), authentication)) {
@@ -200,6 +203,7 @@ public class TrxServiceImpl implements TrxService {
         return trxMapper.toDto(savedTrx);
     }
 
+    //сомневаюсь, что эти операции нужны
     @Override
     public TrxDto updateTrx(Long id, TrxDto clientDto) {
         Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);

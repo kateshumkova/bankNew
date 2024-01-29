@@ -103,9 +103,7 @@ class AccountServiceImplTest {
         accountEntity.setBalance(new BigDecimal(0));
         accountEntity.setName("Name");//productEntity.getName() + "_" + clientEntity.getId());
         accountEntity.setStatus(Status.ACTIVE);
-        AccountEntity savedAccountEntity = accountRepository.saveAndFlush(accountEntity);
-        //  when(accountRepository.saveAndFlush(accountEntity)).thenReturn(savedAccountEntity);
-
+        when(accountRepository.saveAndFlush(any())).thenReturn(accountEntity);
         //вызов метода
         AccountEntity actual = accountService.createAccount();
 
@@ -113,7 +111,8 @@ class AccountServiceImplTest {
 
         //  verify(managerMapper,atLeast(1)).toDto(any());
         verify(accountRepository).saveAndFlush(any());
-        // assertNotNull(actual);
+        assertEquals(Status.ACTIVE, actual.getStatus());
+         assertNotNull(actual);
     }
 
     @Test
