@@ -95,11 +95,11 @@ public class TrxServiceImpl implements TrxService {
 
     @Override
     public TrxDto getById(Long id, Authentication authentication) {
-        if (!authService.checkRole(authentication, "ROLE_USER")
-                || !authService.checkRole(authentication, "ROLE_MANAGER")
-                || !authService.checkRole(authentication, "ROLE_ADMIN")) {
-            throw new AccessDeniedException("Access with such role is impossible");
-        }
+//        if (!authService.checkRole(authentication, "ROLE_USER")
+//                || !authService.checkRole(authentication, "ROLE_MANAGER")
+//                || !authService.checkRole(authentication, "ROLE_ADMIN")) {
+//            throw new AccessDeniedException("Access with such role is impossible");
+//        }
         if (authService.checkRole(authentication,"ROLE_USER")) {
             Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
             if (optTrxEntity.isEmpty()) {

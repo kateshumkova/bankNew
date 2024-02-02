@@ -14,6 +14,8 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 
+import java.math.BigDecimal;
+import java.time.Instant;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,11 +33,11 @@ class ProductServiceImplTest {
     @Mock
     private ProductMapper productMapper;
 
-    @Test
-    void testValidateOptProduct_shouldNotFoundException_ifEmptyProduct() {
-        ValidationException exception = assertThrows(ValidationException.class, () -> productService.getById(1L));
-        assertEquals("No such product", exception.getMessage());
-    }
+//    @Test
+//    void testValidateOptProduct_shouldNotFoundException_ifEmptyProduct() {
+//        ValidationException exception = assertThrows(ValidationException.class, () -> productService.getById(1L));
+//        assertEquals("No such product", exception.getMessage());
+//    }
 
     @Test
     void testGetAll_shouldReturnListProductsDto() {
@@ -59,16 +61,63 @@ class ProductServiceImplTest {
     }
 
     @Test
+    void testGetById_shouldReturnProductDto_ifProductEntityIsPresent() {
+        //заглушки
+        ProductEntity productEntity = new ProductEntity();
+        productEntity.setId(1L);
+        ProductDto productDto = new ProductDto();
+
+        when(productRepository.findById(any())).thenReturn(Optional.of(productEntity));
+        when(productMapper.toDto(productEntity)).thenReturn(productDto);
+        //вызов метода
+        ProductDto actual = productService.getById(1L);
+
+        //проверка результата
+        verify(productMapper, atLeast(1)).toDto(any());
+        assertNotNull(actual);
+    }
+
+    @Test
     void testFindByName_shouldNotFoundException_ifEmptyProduct() {
         NotFoundException exception = assertThrows(NotFoundException.class, () -> productService.findByName("Вклад"));
         assertEquals("Product with name Вклад is not found", exception.getMessage());
     }
 
-//    @Test
-//    void testCreateProduct_shouldNotFoundException_ifEmptyProduct() {
-//        NotFoundException exception = assertThrows(NotFoundException.class, () -> productService.createProduct(new DtoProduct());
-//        assertEquals("", exception.getMessage());
-//    }
+    @Test
+    void testFindByName_shouldReturnListProductDto_ifPresentProduct() {
+        //заглушки
+        ProductEntity productEntity = new ProductEntity();
+        productEntity.setId(1L);
+        ProductDto productDto = new ProductDto();
+
+        when(productRepository.findByName(any())).thenReturn(List.of(productEntity));
+        when(productMapper.toDto(productEntity)).thenReturn(productDto);
+        //вызов метода
+        List<ProductDto> actual = productService.findByName("Вклад");
+
+        //проверка результата
+        verify(productMapper, atLeast(1)).toDto(any());
+        assertNotNull(actual);
+    }
+
+    @Test
+    void testCreateProduct_shouldReturnProductDto() {
+        //заглушки
+        ProductDto productDto = new ProductDto();
+
+        when(productMapper.toEntity(any())).thenReturn(new ProductEntity());
+        when(productMapper.toDto(any())).thenReturn(productDto);
+        when(productRepository.save(any())).thenReturn(new ProductEntity());
+
+        //вызов метода
+        ProductDto actual = productService.createProduct(productDto);
+
+        //проверка результата
+        verify(productRepository, atLeast(1)).save(any());
+        verify(productMapper, atLeast(1)).toDto(any());
+        verify(productMapper, atLeast(1)).toEntity(any());
+        assertNotNull(actual);
+    }
 
     @Test
     void testUpdateProduct_shouldNotFoundException_ifEmptyProduct() {

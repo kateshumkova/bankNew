@@ -18,6 +18,7 @@ import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
 import java.time.Instant;
@@ -27,6 +28,7 @@ import java.util.List;
 import java.util.Optional;
 
 import static com.example.banknew.enums.Status.ACTIVE;
+import static com.example.banknew.enums.Status.INACTIVE;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -289,57 +291,25 @@ class AgreementServiceImplTest {
         assertEquals("Sum of agreement is less or greater than than limits of the product", exception.getMessage());
     }
 
-//    public CreateAgreementResponse createAgreement(CreateAgreementRequest createAgreementRequest) {
-//
-//        Optional<ClientEntity> optClientEntity = clientRepository.findById(createAgreementRequest.getClientId());
-//        Optional<ProductEntity> optProductEntity = productRepository.findById(createAgreementRequest.getProductId());
-//        Optional<ManagerEntity> optManagerEntity = managerRepository.findById(createAgreementRequest.getManagerId());
-//        // validateOptional(Optional<ClientEntity>)
-//        if (optClientEntity.isEmpty() || optProductEntity.isEmpty() || optManagerEntity.isEmpty()) {
-//            throw new NotFoundException("Some value is empty");
-//        }
-//
-//        ProductEntity productEntity = optProductEntity.get();
-//
-//        //validation of sum and duration
-//        if ((createAgreementRequest.getSum().compareTo(productEntity.getLimitMax()) > 0)
-//                || (createAgreementRequest.getSum().compareTo(productEntity.getLimitMin()) < 0)) {
-//            throw new ValidationException("Sum of agreement is less or greater than than limits of the product");
-//        }
-//        if (createAgreementRequest.getDuration() != productEntity.getDepositPeriod()) {
-//            throw new ValidationException("Duration of agreement is less or greater than it is in duration setups of the product");
-//        }
-//
-//        AgreementEntity agreementEntity = new AgreementEntity();
-//        ClientEntity clientEntity = optClientEntity.get();
-//        agreementEntity.setClient(clientEntity);
-//        agreementEntity.setProduct(productEntity);
-//        ManagerEntity managerEntity = optManagerEntity.get();
-//        agreementEntity.setManager(managerEntity);
-//
-//        AccountEntity accountEntity = accountService.createAccount();
-//        agreementEntity.setAccount(accountEntity);
-//
-//        agreementEntity.setInterestRate(productEntity.getInterestRate());
-//        agreementEntity.setSum(createAgreementRequest.getSum());
-//        agreementEntity.setStatus(ACTIVE);
-//
-//        LocalDate maturityDate = LocalDate.now().plusMonths(createAgreementRequest.getDuration());
-//
-//        Instant instantMaturityDate = maturityDate.atStartOfDay(ZoneId.systemDefault()).toInstant();
-//        agreementEntity.setMaturityDate(instantMaturityDate);
-//        AgreementEntity savedAgreementEntity = agreementRepository.saveAndFlush(agreementEntity);
-//
-//        CreateAgreementResponse createAgreementResponse = new CreateAgreementResponse();
-//        createAgreementResponse.setAgreementDto(agreementMapper.toDto(savedAgreementEntity));
-//        createAgreementResponse.setClientDto(clientMapper.toDto(clientEntity));
-//        createAgreementResponse.setAccountDto(accountMapper.toDto(accountEntity));
-//        createAgreementResponse.setProductDto(productMapper.toDto(productEntity));
-//        createAgreementResponse.setManagerDto(managerMapper.toDto(managerEntity));
-//
-//        log.info("Agreement with ID " + savedAgreementEntity.getId() + " is created");
-//
-//        return createAgreementResponse;
-//    }
+    @Test
+    void testDeleteAgreement_shouldNotFoundException_ifEmptyAgreement() {
+        //заглушки
+        when(agreementRepository.findById(any())).thenReturn(Optional.ofNullable(null));
 
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> agreementService.deleteAgreement(1L));
+        assertEquals("Agreement cannot be deleted, 1 is not found", exception.getMessage());
+    }
+    @Test
+    void testDeleteAgreement_shouldSaveAgreementEntityWithStatusInactive() {
+        //заглушки
+        AgreementEntity agreementEntity = new AgreementEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        agreementEntity.setAccount(accountEntity);
+        when(agreementRepository.findById(any())).thenReturn(Optional.of(agreementEntity));
+
+        agreementService.deleteAgreement(1L);
+       verify(agreementRepository,atLeastOnce()).save(any());
+       verify(accountService,atLeastOnce()).deleteAccount(any());
+       assertEquals(agreementEntity.getStatus(),INACTIVE);
+    }
 }

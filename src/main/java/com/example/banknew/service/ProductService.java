@@ -15,6 +15,6 @@ public interface ProductService {
     ProductDto createProduct(ProductDto productDto);
     ProductDto updateProduct(Long id, ProductDto productDto);
     void deleteProduct(Long id);
-    boolean validateOptProduct(Optional<ProductEntity> optProductEntity);
+//    boolean validateOptProduct(Optional<ProductEntity> optProductEntity);
 
 }

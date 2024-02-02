@@ -64,16 +64,14 @@ public class TrxController {
             @ApiResponse(responseCode = "200", description = "Транзакция найдена",
                     content = {@Content(mediaType = "application/json",
                             schema = @Schema(implementation = TrxDto.class))}),
-            @ApiResponse(responseCode = "400", description = "Неверный запрос",
-                    content = @Content),
-            @ApiResponse(responseCode = "404", description = "Транзакция не найдена",
-                    content = @Content)})
+            @ApiResponse(responseCode = "404", description = "Транзакция не найдена"),
+            @ApiResponse(responseCode = "403", description = "Доступ запрещен")})
     @GetMapping("/{id}")
     public TrxDto getById(@Parameter(description = "id транзакции, по которому ведется поиск", example = "2") @PathVariable Long id, Authentication authentication) {
         return trxService.getById(id, authentication);
     }
 
-    @PreAuthorize("hasAnyRole('ROLE_USER')")
+    @PreAuthorize("hasRole('ROLE_USER')")
     @Operation(summary = "Создать запись о новой транзакции")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Транзакция совершена",
