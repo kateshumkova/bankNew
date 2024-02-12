@@ -29,18 +29,9 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
 
-//    @Override
-//    public boolean validateOptProduct(Optional<ProductEntity> optProductEntity) {
-//
-//        if (optProductEntity.isEmpty()) {
-//            throw new ValidationException("No such product");
-//        }
-//        return true;
-//    }
 
     @Override
     public List<ProductDto> getAll() {
-
         return productRepository.findAll().stream()
                 .map(productMapper::toDto)
                 .toList();
@@ -70,9 +61,7 @@ public class ProductServiceImpl implements ProductService {
     public ProductDto createProduct(ProductDto productDto) {
         ProductEntity savedProduct = productRepository.save(productMapper.toEntity(productDto));
         log.info("Created and saved product with ID= {}", savedProduct.getId());
-        return productMapper.toDto(savedProduct);
-    }
-
+        return productMapper.toDto(savedProduct);}
     @Override
     public ProductDto updateProduct(Long id, ProductDto productDto) {
         Optional<ProductEntity> optProductEntity = productRepository.findById(id);

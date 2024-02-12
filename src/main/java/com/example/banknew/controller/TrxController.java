@@ -71,7 +71,7 @@ public class TrxController {
         return trxService.getById(id, authentication);
     }
 
-    @PreAuthorize("hasRole('ROLE_USER')")
+    @PreAuthorize("hasAnyRole('ROLE_USER')")
     @Operation(summary = "Создать запись о новой транзакции")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = "Транзакция совершена",

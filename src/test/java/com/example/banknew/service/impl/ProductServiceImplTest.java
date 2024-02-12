@@ -16,6 +16,7 @@ import org.springframework.boot.test.context.SpringBootTest;
 
 import java.math.BigDecimal;
 import java.time.Instant;
+import java.util.Collections;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,16 +43,32 @@ class ProductServiceImplTest {
     @Test
     void testGetAll_shouldReturnListProductsDto() {
         //заглушки
-        // AccountEntity accountEntity = new AccountEntity();
-        // when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+
+        when(productRepository.findAll()).thenReturn(List.of(new ProductEntity(), new ProductEntity()));
+        when(productMapper.toDto(any())).thenReturn(new ProductDto());
 
         //вызов метода
         List<ProductDto> actual = productService.getAll();
 
         //проверка результата
-//        verify(accountMapper,atLeast(1)).toDto(any());
+        verify(productMapper, atLeast(2)).toDto(any());
         verify(productRepository, atLeast(1)).findAll();
-        assertNotNull(actual);
+        assertEquals(2, actual.size());
+    }
+
+    @Test
+    void testGetAll_shouldReturnEmptyList() {
+        //заглушки
+
+        when(productRepository.findAll()).thenReturn(Collections.emptyList());
+
+        //вызов метода
+        List<ProductDto> actual = productService.getAll();
+
+        //проверка результата
+        verify(productMapper, never()).toDto(any());
+        verify(productRepository, atLeast(1)).findAll();
+        assertEquals(0, actual.size());
     }
 
     @Test

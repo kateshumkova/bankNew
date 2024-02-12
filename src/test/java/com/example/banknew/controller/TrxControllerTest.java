@@ -1,15 +1,9 @@
 package com.example.banknew.controller;
 
 
-import com.example.banknew.dtos.AccountDto;
-import com.example.banknew.dtos.ProductDto;
 import com.example.banknew.dtos.TrxDto;
-import com.example.banknew.entities.ClientEntity;
-import com.example.banknew.entities.RoleEntity;
-import com.example.banknew.entities.TrxEntity;
-import com.example.banknew.entities.UserEntity;
-import com.example.banknew.enums.Status;
 import com.example.banknew.enums.TrxType;
+import com.example.banknew.exception.AccessDeniedException;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.TrxMapper;
@@ -17,32 +11,36 @@ import com.example.banknew.repository.ClientRepository;
 import com.example.banknew.repository.TrxRepository;
 import com.example.banknew.repository.UserRepository;
 import com.example.banknew.service.TrxService;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.stubbing.OngoingStubbing;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
+import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.boot.test.mock.mockito.MockBean;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
-import org.springframework.security.core.Authentication;
+import org.springframework.http.MediaType;
+import org.springframework.security.test.context.support.WithAnonymousUser;
 import org.springframework.security.test.context.support.WithMockUser;
 import org.springframework.test.web.servlet.MockMvc;
 
 import java.math.BigDecimal;
-import java.nio.file.AccessDeniedException;
 import java.util.List;
-import java.util.Optional;
 
-import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.mockito.Mockito.verify;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
-@WebMvcTest(TrxController.class)
+@SpringBootTest
+@AutoConfigureMockMvc
+//@WebMvcTest(TrxController.class)
 class TrxControllerTest {
     @Autowired
     public MockMvc mvc;
+    @Autowired
+    public ObjectMapper objectMapper;
     @MockBean
     public TrxService trxService;
     @MockBean
@@ -57,20 +55,13 @@ class TrxControllerTest {
 
     @WithMockUser(roles = "MANAGER")
     @Test
-    void getAll() throws Exception {
+    void getAll_shouldReturn200() throws Exception {
         when(trxService.getAll()).thenReturn(List.of(new TrxDto(), new TrxDto()));
         mvc.perform(get("/api/trx/"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(2));
     }
 
-    @Test
-    void getByAccountId() {
-    }
-
-    @Test
-    void getById() {
-    }
 
     @WithMockUser(roles = "USER")
     @Test
@@ -95,17 +86,16 @@ class TrxControllerTest {
         mvc.perform(get("/api/trx/1"))
                 .andExpect(status().isNotFound());
     }
-    @WithMockUser()
+
+    @WithMockUser(roles = "V")
     @Test
     void getById_shouldReturn403() throws Exception {
 
-      //  when(trxService.getById(any(), any())).thenThrow(new AccessDeniedException("Access with such role is impossible"));
+        //  when(trxService.getById(any(), any())).thenThrow(new AccessDeniedException("Access with such role is impossible"));
         mvc.perform(get("/api/trx/1"))
                 .andExpect(status().isForbidden());
     }
-    @Test
-    void add() {
-    }
+
     @WithMockUser(roles = "USER")
     @Test
     void add_shouldReturn200() throws Exception {
@@ -116,23 +106,121 @@ class TrxControllerTest {
         trxDto.setAmount(BigDecimal.valueOf(100));
         trxDto.setDescription("Popolnenie");
         when(trxService.createTrx(any(), any())).thenReturn(trxDto);
-        mvc.perform(post("/api/trx/"))
+        mvc.perform(post("/api/trx/")
+                        //тело запроса
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(trxDto)))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(4));
     }
+
     @WithMockUser(roles = "USER")
     @Test
     void add_shouldReturn400() throws Exception {
 
-        when(trxService.getById(any(), any())).thenThrow(new ValidationException(""));
-        mvc.perform(post("/api/trx/"))
+        when(trxService.createTrx(any(), any())).thenThrow(new ValidationException(""));
+        mvc.perform(post("/api/trx/")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new TrxDto())))
                 .andExpect(status().isBadRequest());
     }
+
+    @WithMockUser(roles = {"ADMIN", "MANAGER"})
     @Test
-    void update() {
+    void add_shouldReturn403() throws Exception {
+
+        mvc.perform(post("/api/trx/")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(new TrxDto())))
+                .andExpect(status().isForbidden());
     }
 
+    @WithAnonymousUser
     @Test
-    void delete() {
+    void add_shouldReturn401() throws Exception {
+
+        mvc.perform(post("/api/trx/"))
+                .andExpect(status().isUnauthorized());
+    }
+
+    @WithMockUser(roles = "ADMIN")
+    @Test
+    void update_shouldReturn200() throws Exception {
+        TrxDto trxDto = new TrxDto();
+        trxDto.setAccountId(1L);
+        trxDto.setTrxType(TrxType.DEBIT);
+        trxDto.setAmount(BigDecimal.valueOf(100));
+        trxDto.setDescription("Popolnenie");
+
+        //trxService.deleteTrx(any());
+        mvc.perform(put("/api/trx/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(trxDto)))
+                .andExpect(status().isOk());
+    }
+
+    @WithMockUser(roles = "ADMIN")
+    @Test
+    void update_shouldReturn404() throws Exception {
+        TrxDto trxDto = new TrxDto();
+        trxDto.setAccountId(1L);
+        trxDto.setTrxType(TrxType.DEBIT);
+        trxDto.setAmount(BigDecimal.valueOf(100));
+        trxDto.setDescription("Popolnenie");
+        when(trxService.updateTrx(any(), any())).thenThrow(new NotFoundException(""));
+        //trxService.deleteTrx(any());
+        mvc.perform(put("/api/trx/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(trxDto)))
+                .andExpect(status().isNotFound());
+    }
+
+    @WithMockUser()
+    @Test
+    void update_shouldReturn403() throws Exception {
+        TrxDto trxDto = new TrxDto();
+        trxDto.setAccountId(1L);
+        trxDto.setTrxType(TrxType.DEBIT);
+        trxDto.setAmount(BigDecimal.valueOf(100));
+         trxDto.setDescription("Popolnenie");
+        mvc.perform(put("/api/trx/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(trxDto)))
+                .andExpect(status().isForbidden());
+    }
+    @WithMockUser()
+    @Test
+    void update_shouldReturn400() throws Exception {
+        String json = "{\"accountId\":1,\"trxType\":\"5\",\"amount\":100,\"description\":\"Popolnenie\"}";
+        mvc.perform(put("/api/trx/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(json))
+                .andExpect(status().isBadRequest());
+    }
+
+    @WithMockUser(roles = "ADMIN")
+    @Test
+    void delete_shouldReturn200() throws Exception {
+
+        //trxService.deleteTrx(any());
+        mvc.perform(delete("/api/trx/1"))
+                .andExpect(status().isOk());
+        verify(trxService).deleteTrx(1L);
+    }
+
+    //    @WithMockUser(roles = "ADMIN")
+//    @Test
+//    void delete_shouldReturn404() throws Exception {
+//        OngoingStubbing<T> tOngoingStubbing = when(trxService.deleteTrx(any())).thenThrow(new NotFoundException(""));
+//        mvc.perform(delete("/api/trx/1"))
+//                .andExpect(status().isNotFound());
+//        verify(trxService).deleteTrx(1L);
+//    }
+    @WithMockUser()
+    @Test
+    void delete_shouldReturn403() throws Exception {
+
+        mvc.perform(delete("/api/trx/1"))
+                .andExpect(status().isForbidden());
     }
 }

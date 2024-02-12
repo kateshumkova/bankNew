@@ -73,25 +73,6 @@ public class TrxServiceImpl implements TrxService {
                 .map(trxMapper::toDto)
                 .toList();
     }
-//правильно ли? ниже рабочие спагетти
-//    @Override
-//    public TrxDto getById(Long id, Authentication authentication) {
-//        if (authentication.getAuthorities().stream()
-//                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
-//            Optional<TrxEntity> optTrxEntity = Optional.ofNullable(trxRepository.findById(id).orElseThrow(() -> new NotFoundException("Trx " + id + "is not found")));
-//            TrxEntity trxEntity = optTrxEntity.get();
-//            Long accountId = trxEntity.getAccount().getId();
-//            if (checkOwner(accountId, authentication)) {
-//                return trxMapper.toDto(optTrxEntity.get());
-//            } else {
-//                throw new NotFoundException("This account belongs to other user");
-//            }
-//
-//        } else {
-//            Optional<TrxEntity> optTrxEntity = Optional.ofNullable(trxRepository.findById(id).orElseThrow(() -> new NotFoundException("Trx " + id + "is not found")));
-//            return trxMapper.toDto(optTrxEntity.get());
-//        }
-//    }
 
     @Override
     public TrxDto getById(Long id, Authentication authentication) {
@@ -100,7 +81,7 @@ public class TrxServiceImpl implements TrxService {
 //                || !authService.checkRole(authentication, "ROLE_ADMIN")) {
 //            throw new AccessDeniedException("Access with such role is impossible");
 //        }
-        if (authService.checkRole(authentication,"ROLE_USER")) {
+        if (authService.checkRole(authentication, "ROLE_USER")) {
             Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
             if (optTrxEntity.isEmpty()) {
                 throw new NotFoundException("Trx " + id + " is not found");
@@ -129,11 +110,10 @@ public class TrxServiceImpl implements TrxService {
                 throw new NotFoundException("This account belongs to other user");
             }
             return returnListOfTrxForAccount(accountId);
-        } else if (authService.checkRole(authentication, "ROLE_MANAGER")
-                || authService.checkRole(authentication, "ROLE_ADMIN")) {
-            return returnListOfTrxForAccount(accountId);
-        } else {
-            throw new AccessDeniedException("Access with such role is impossible");
+        } else //if (authService.checkRole(authentication, "ROLE_MANAGER")
+               // || authService.checkRole(authentication, "ROLE_ADMIN")) {
+        { return returnListOfTrxForAccount(accountId);
+
         }
     }
 
@@ -147,7 +127,7 @@ public class TrxServiceImpl implements TrxService {
 
             List<TrxEntity> trxEntities = trxRepository.findByStatus(status);
             if (trxEntities.isEmpty()) {
-                throw new NotFoundException("There is no trx with status" + status);
+                throw new NotFoundException("There is no trx with status " + status);
             }
             return trxEntities.stream()
                     .map(trxMapper::toDto)
@@ -155,7 +135,7 @@ public class TrxServiceImpl implements TrxService {
         } else {
             List<TrxEntity> trxEntities = trxRepository.findByStatus(status);
             if (trxEntities.isEmpty()) {
-                throw new NotFoundException("There is no trx with status" + status);
+                throw new NotFoundException("There is no trx with status " + status);
             }
             return trxEntities.stream()
                     .map(trxMapper::toDto)
@@ -176,7 +156,7 @@ public class TrxServiceImpl implements TrxService {
         TrxEntity trxEntity = trxMapper.toEntity(trxDto);
         Optional<AccountEntity> optAccountEntity = accountRepository.findById(trxDto.getAccountId());
         if (optAccountEntity.isEmpty()) {
-            throw new NotFoundException("There is no such account" + trxDto.getAccountId());
+            throw new NotFoundException("There is no such account " + trxDto.getAccountId());
         }
         AccountEntity accountEntity = optAccountEntity.get();
         BigDecimal balanceBeforeTrx = accountEntity.getBalance();
@@ -189,10 +169,10 @@ public class TrxServiceImpl implements TrxService {
             //проверка достаточен ли баланс для проведения операции списания
 
             BigDecimal amountTrx = trxDto.getAmount();
-            if (amountTrx.compareTo(balanceBeforeTrx) <= 0) {
-                accountEntity.setBalance(balanceBeforeTrx.subtract(trxDto.getAmount()));
-            } else log.info("Balance is not enough to proceed the operation");
-            throw new ValidationException("Balance is not enough to proceed the operation");
+            if (amountTrx.compareTo(balanceBeforeTrx) >= 0) {
+                throw new ValidationException("Balance is not enough to proceed the operation");
+            }
+            accountEntity.setBalance(balanceBeforeTrx.subtract(trxDto.getAmount()));
         }
         trxEntity.setAccount(accountEntity);
         trxEntity.setStatus(Status.ACTIVE);

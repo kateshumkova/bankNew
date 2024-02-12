@@ -37,8 +37,7 @@ public class ProductController {
                     content = @Content)})
     @GetMapping("/")
     public List<ProductDto> getAll() {
-        List<ProductDto> products = productService.getAll();
-        return products;
+        return productService.getAll();
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MANAGER','ROLE_USER')")

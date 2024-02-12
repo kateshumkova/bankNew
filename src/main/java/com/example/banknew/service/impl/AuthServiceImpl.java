@@ -16,8 +16,5 @@ public class AuthServiceImpl implements AuthService {
         return authentication.getAuthorities().stream()
                 .anyMatch(r -> r.getAuthority().equalsIgnoreCase(roleName));
     }
-    //todo
-    //assert true
-    //assertFalse
-    // actual =checkRole(auth,role)
+
 }

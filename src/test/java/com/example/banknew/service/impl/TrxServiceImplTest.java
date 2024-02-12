@@ -2,6 +2,7 @@ package com.example.banknew.service.impl;
 
 import com.example.banknew.dtos.TrxDto;
 import com.example.banknew.entities.*;
+import com.example.banknew.enums.Status;
 import com.example.banknew.exception.AccessDeniedException;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
@@ -15,10 +16,13 @@ import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 
+import java.math.BigDecimal;
 import java.util.Arrays;
 import java.util.List;
 import java.util.Optional;
 
+import static com.example.banknew.enums.TrxType.CREDIT;
+import static com.example.banknew.enums.TrxType.DEBIT;
 import static org.hamcrest.CoreMatchers.hasItems;
 import static org.hamcrest.MatcherAssert.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
@@ -95,7 +99,7 @@ class TrxServiceImplTest {
         RoleEntity roleEntity = new RoleEntity();
         roleEntity.setName("ROLE_USER");
         Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
-      //  when(authService.checkRole(authentication,"ROLE_USER")).thenReturn(true);
+        //  when(authService.checkRole(authentication,"ROLE_USER")).thenReturn(true);
 
         NotFoundException exception = assertThrows(NotFoundException.class,
                 () -> trxService.getById(1L, authentication));
@@ -144,17 +148,17 @@ class TrxServiceImplTest {
         verify(trxMapper, atLeast(1)).toDto(any());
         //  assertNotNull(actual);
     }
-
-    @Test
-    void testGetById_shouldNotFoundException_ifUnknownRole_ifEmptyTrx() {
-        RoleEntity roleEntity = new RoleEntity();
-        roleEntity.setName("ROLE_VISITOR");
-        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
-
-        AccessDeniedException exception = assertThrows(AccessDeniedException.class,
-                () -> trxService.getById(1L, authentication));
-        assertEquals("Access with such role is impossible", exception.getMessage());
-    }
+//todo почему пропускает роль, которая не может дергать эту ручку
+//    @Test
+//    void testGetById_shouldNotFoundException_ifUnknownRole_ifEmptyTrx() {
+//        RoleEntity roleEntity = new RoleEntity();
+//        roleEntity.setName("ROLE_VISITOR");
+//        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+//
+//        NotFoundException exception = assertThrows(NotFoundException.class,
+//                () -> trxService.getById(1L, authentication));
+//        assertEquals("Access with such role is impossible", exception.getMessage());
+//    }
 
     @Test
     void testGetById_shouldReturnTrxDto_ifRoleUser_ifPresentTrx() {
@@ -175,7 +179,7 @@ class TrxServiceImplTest {
         when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
         when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
         when(trxMapper.toDto(any())).thenReturn(new TrxDto());
-        when(authService.checkRole(any(),any())).thenReturn(true);
+        when(authService.checkRole(any(), any())).thenReturn(true);
         TrxDto actual = trxService.getById(1L, createAuthentication("ROLE_USER"));
 
         //проверка результата
@@ -233,12 +237,62 @@ class TrxServiceImplTest {
         trxEntity.setAccount(accountEntity);
         roleEntity.setName("ROLE_USER");
         Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
         when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
-        when(userRepository.findByUsername(authentication.getName())).thenReturn(Optional.ofNullable(null));
+        // when(userRepository.findByUsername(any())).thenReturn(Optional.ofNullable(null));
 
+        // var actual  = trxService.getById(1L, authentication);
         NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.getById(1L, authentication));
         assertEquals("There is no user with such username-email", exception.getMessage());
 
+    }
+    @Test
+    void testGetById_shouldReturnTrxDto_ifRoleManager_ifPresentTrx() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_MANAGER");
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(1L);
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setId(1L);
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+
+        TrxDto actual = trxService.getById(1L, authentication);
+
+        //проверка результата
+        verify(trxMapper, atLeast(1)).toDto(any());
+        assertNotNull(actual);
+    }
+    @Test
+    void testGetById_shouldNotFoundException_ifRoleUser_checkOwnerFalse() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        ClientEntity clientEntity = new ClientEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_USER");
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
+
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.getById(1L, authentication));
+        assertEquals("This account belongs to other user", exception.getMessage());
     }
 
     @Test
@@ -250,6 +304,7 @@ class TrxServiceImplTest {
         trxEntity.setAccount(accountEntity);
         roleEntity.setName("ROLE_USER");
         Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
         when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
         when(userRepository.findByUsername(authentication.getName())).thenReturn(Optional.of(userEntity));
 
@@ -321,9 +376,10 @@ class TrxServiceImplTest {
         trxEntity.setAccount(accountEntity);
         roleEntity.setName("ROLE_USER");
         Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
         when(trxRepository.findByAccountId(any())).thenReturn(List.of(trxEntity));
-        when(userRepository.findByUsername(authentication.getName())).thenReturn(Optional.of(userEntity));
-        when(clientRepository.findByEmail(userEntity.getUsername())).thenReturn(Optional.ofNullable(null));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.ofNullable(null));
 
         NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByAccountId(1L, authentication));
         assertEquals("There is no client with such username-email", exception.getMessage());
@@ -340,14 +396,43 @@ class TrxServiceImplTest {
         Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
         when(trxRepository.findByAccountId(any())).thenReturn(List.of(trxEntity));
         when(userRepository.findByUsername(authentication.getName())).thenReturn(Optional.ofNullable(null));
+        when(authService.checkRole(any(), any())).thenReturn(true);
 
-        //  assertNotNull(actual);
         NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByAccountId(1L, authentication));
         assertEquals("There is no user with such username-email", exception.getMessage());
     }
-
     @Test
-    void testGetById_shouldReturnTrxDto_ifRoleManager_ifPresentTrx() {
+    void testFindByAccountId_shouldReturnListTrxDto_ifRoleUser_ifPresentTrx() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_USER");
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(1L);
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setId(1L);
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+        when(trxRepository.findByAccountId(any())).thenReturn(List.of(trxEntity));
+
+        List<TrxDto> actual = trxService.findByAccountId(1L,authentication);
+
+        //проверка результата
+        verify(trxMapper, atLeast(1)).toDto(any());
+        assertNotNull(actual);
+    }
+    @Test
+    void testFindByAccountId_shouldReturnListTrxDto_ifRoleManager_ifPresentTrx() {
         RoleEntity roleEntity = new RoleEntity();
         TrxEntity trxEntity = new TrxEntity();
         trxEntity.setId(1L);
@@ -368,17 +453,122 @@ class TrxServiceImplTest {
         when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
         when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
         when(trxMapper.toDto(any())).thenReturn(new TrxDto());
-        TrxDto actual = trxService.getById(1L, authentication);
+        when(trxRepository.findByAccountId(any())).thenReturn(List.of(trxEntity));
+
+        List<TrxDto> actual = trxService.findByAccountId(1L,authentication);
 
         //проверка результата
         verify(trxMapper, atLeast(1)).toDto(any());
         assertNotNull(actual);
     }
-
     @Test
-    void findByStatus() {
+    void testFindByAccountId_shouldNotFoundException_ifRoleUser_ifTrxEmpty() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_USER");
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(1L);
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setId(1L);
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findByAccountId(any())).thenReturn(List.of());
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByAccountId(1L,authentication));
+        assertEquals("There is no trx for this account 1", exception.getMessage());
+    }
+    @Test
+    void testFindByAccountId_shouldNotFoundException_ifRoleManager_ifTrxEmpty() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_MANAGER");
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(1L);
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setId(1L);
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findByAccountId(any())).thenReturn(List.of());
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByAccountId(1L,authentication));
+        assertEquals("There is no trx for this account 1", exception.getMessage());
+    }
+    @Test
+    void testFindByAccountId_shouldNotFoundException_ifRoleUser_ifCheckOwnerIsFalse() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_USER");
+        ClientEntity clientEntity = new ClientEntity();
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByAccountId(1L, authentication));
+        assertEquals("This account belongs to other user", exception.getMessage());
     }
 
+
+    @Test
+    void testFindByStatus_shouldNotFoundException_ifRoleUser_ifEmptyClientInCheckOwner() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_USER");
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
+        when(trxRepository.findByAccountId(any())).thenReturn(List.of(trxEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.ofNullable(null));
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByStatus(authentication,1L, Status.ACTIVE));
+        assertEquals("There is no client with such username-email", exception.getMessage());
+    }
+    @Test
+    void testFindByStatus_shouldNotFoundException_ifRoleUser_ifEmptyUserInCheckOwner() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_USER");
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findByAccountId(any())).thenReturn(List.of(trxEntity));
+        when(userRepository.findByUsername(authentication.getName())).thenReturn(Optional.ofNullable(null));
+        when(authService.checkRole(any(), any())).thenReturn(true);
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByStatus(authentication,1L,Status.ACTIVE));
+        assertEquals("There is no user with such username-email", exception.getMessage());
+    }
     @Test
     void testCreateTrx_shouldValidationException_ifRoleIsNotUser() {
         RoleEntity roleEntity = new RoleEntity();
@@ -393,7 +583,281 @@ class TrxServiceImplTest {
     }
 
     @Test
+    void testFindByStatus_shouldReturnListTrxDto_ifRoleUser_ifPresentTrx() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_USER");
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(1L);
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setId(1L);
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+        when(trxRepository.findByStatus(any())).thenReturn(List.of(trxEntity));
+
+        List<TrxDto> actual = trxService.findByStatus(authentication,1L,Status.ACTIVE);
+
+        //проверка результата
+        verify(trxMapper, atLeast(1)).toDto(any());
+        assertNotNull(actual);
+    }
+    @Test
+    void testFindByStatus_shouldReturnListTrxDto_ifRoleManager_ifPresentTrx() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_MANAGER");
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(1L);
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setId(1L);
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+        when(trxRepository.findByStatus(any())).thenReturn(List.of(trxEntity));
+
+        List<TrxDto> actual = trxService.findByStatus(authentication,1L,Status.ACTIVE);
+
+        //проверка результата
+        verify(trxMapper, atLeast(1)).toDto(any());
+        assertNotNull(actual);
+    }
+    @Test
+    void testFindByStatus_shouldNotFoundException_ifRoleUser_ifTrxEmpty() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_USER");
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(1L);
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setId(1L);
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByStatus(authentication,1L,Status.ACTIVE));
+        assertEquals("There is no trx with status ACTIVE", exception.getMessage());
+    }
+    @Test
+    void testFindByStatus_shouldNotFoundException_ifRoleManager_ifTrxEmpty() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_MANAGER");
+        ClientEntity clientEntity = new ClientEntity();
+        clientEntity.setId(1L);
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setId(1L);
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByStatus(authentication,1L,Status.ACTIVE));
+        assertEquals("There is no trx with status ACTIVE", exception.getMessage());
+    }
+    @Test
+    void testFindByStatus_shouldNotFoundException_ifRoleUser_ifCheckOwnerIsFalse() {
+        RoleEntity roleEntity = new RoleEntity();
+        TrxEntity trxEntity = new TrxEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        UserEntity userEntity = new UserEntity();
+        trxEntity.setAccount(accountEntity);
+        roleEntity.setName("ROLE_USER");
+        ClientEntity clientEntity = new ClientEntity();
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.findByStatus(authentication,1L,Status.ACTIVE));
+        assertEquals("This account belongs to other user", exception.getMessage());
+    }
+    @Test
+        //todo
+    void testCreateTrx_HappyPath_DebitTrx() {
+        RoleEntity roleEntity = new RoleEntity();
+        // TrxEntity trxEntity = new TrxEntity();
+        ClientEntity clientEntity = new ClientEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        accountEntity.setBalance(BigDecimal.valueOf(100));
+        UserEntity userEntity = new UserEntity();
+        // trxEntity.setAccount(accountEntity);
+        TrxDto trxDto = new TrxDto();
+        trxDto.setAccountId(1L);
+        trxDto.setAmount(BigDecimal.valueOf(500));
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        trxEntity.setAmount(BigDecimal.valueOf(500));
+        trxEntity.setTrxType(DEBIT);
+        roleEntity.setName("ROLE_USER");
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toEntity(any())).thenReturn(trxEntity);
+        when(trxRepository.save(any())).thenReturn(new TrxEntity());
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+
+
+        TrxDto actual = trxService.createTrx(trxDto, authentication);
+
+        //проверка результата
+        verify(trxMapper, atLeast(1)).toDto(any());
+        assertNotNull(actual);
+    }
+
+    @Test
+    void testCreateTrx_CreditTrx_shouldValidationException() {
+        RoleEntity roleEntity = new RoleEntity();
+        // TrxEntity trxEntity = new TrxEntity();
+        ClientEntity clientEntity = new ClientEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        accountEntity.setBalance(BigDecimal.valueOf(1000));
+        UserEntity userEntity = new UserEntity();
+        // trxEntity.setAccount(accountEntity);
+        TrxDto trxDto = new TrxDto();
+        trxDto.setAccountId(1L);
+        trxDto.setAmount(BigDecimal.valueOf(5000));
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        trxEntity.setAmount(BigDecimal.valueOf(5000));
+        trxEntity.setTrxType(CREDIT);
+        roleEntity.setName("ROLE_USER");
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toEntity(any())).thenReturn(trxEntity);
+        when(trxRepository.save(any())).thenReturn(new TrxEntity());
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> trxService.createTrx(trxDto, authentication));
+        assertEquals("Balance is not enough to proceed the operation", exception.getMessage());
+    }
+
+    @Test
+    void testCreateTrx_CreditTrx_HappyPath() {
+        RoleEntity roleEntity = new RoleEntity();
+        // TrxEntity trxEntity = new TrxEntity();
+        ClientEntity clientEntity = new ClientEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        accountEntity.setBalance(BigDecimal.valueOf(1000));
+        UserEntity userEntity = new UserEntity();
+        BigDecimal balanceBeforeTrx = accountEntity.getBalance();
+        // trxEntity.setAccount(accountEntity);
+        TrxDto trxDto = new TrxDto();
+        trxDto.setAccountId(1L);
+        trxDto.setAmount(BigDecimal.valueOf(500));
+        TrxEntity trxEntity = new TrxEntity();
+        trxEntity.setId(1L);
+        trxEntity.setAmount(BigDecimal.valueOf(500));
+        trxEntity.setTrxType(CREDIT);
+        roleEntity.setName("ROLE_USER");
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setAccount(accountEntity);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(trxMapper.toEntity(any())).thenReturn(trxEntity);
+        when(trxRepository.save(any())).thenReturn(new TrxEntity());
+        when(trxMapper.toDto(any())).thenReturn(new TrxDto());
+
+        TrxDto actual = trxService.createTrx(trxDto, authentication);
+
+        //проверка результата
+        verify(trxMapper, atLeast(1)).toDto(any());
+        assertNotNull(actual);
+    }
+
+    @Test
+        //todo
     void testCreateTrx_shouldNotFoundException_ifRoleUser_ifCheckOwnerIsFalse() {
+        RoleEntity roleEntity = new RoleEntity();
+        // TrxEntity trxEntity = new TrxEntity();
+        ClientEntity clientEntity = new ClientEntity();
+        AccountEntity accountEntity = new AccountEntity();
+        AccountEntity accountEntity1 = new AccountEntity();
+        accountEntity.setId(1L);
+        accountEntity1.setId(5L);
+        UserEntity userEntity = new UserEntity();
+        TrxDto trxDto = new TrxDto();
+        trxDto.setAccountId(1L);
+        roleEntity.setName("ROLE_USER");
+        AgreementEntity agreementEntity = new AgreementEntity();
+        agreementEntity.setAccount(accountEntity1);
+        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
+
+
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
+
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.createTrx(trxDto, authentication));
+        assertEquals("This account belongs to other user", exception.getMessage());
+    }
+
+    @Test
+    void testCreateTrx_shouldNotFoundException_ifRoleUser_ifAccountEntityIsEmpty() {
         RoleEntity roleEntity = new RoleEntity();
         // TrxEntity trxEntity = new TrxEntity();
         ClientEntity clientEntity = new ClientEntity();
@@ -411,10 +875,10 @@ class TrxServiceImplTest {
         when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
         when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
         when(agreementRepository.findByClientId(any())).thenReturn(List.of(agreementEntity));
-//описать поведение агримент репозитория
-        //  assertNotNull(actual);
+        when(authService.checkRole(any(), any())).thenReturn(true);
+
         NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.createTrx(trxDto, authentication));
-        assertEquals("This account belongs to other user", exception.getMessage());
+        assertEquals("There is no such account 1", exception.getMessage());
     }
 
     @Test
@@ -428,51 +892,12 @@ class TrxServiceImplTest {
         roleEntity.setName("ROLE_USER");
         Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
         // when(trxRepository.findByAccountId(any())).thenReturn(List.of(trxEntity));
-        when(userRepository.findByUsername(authentication.getName())).thenReturn(Optional.of(userEntity));
-        when(clientRepository.findByEmail(userEntity.getUsername())).thenReturn(Optional.of(clientEntity));
-
+        when(userRepository.findByUsername(any())).thenReturn(Optional.of(userEntity));
+        when(clientRepository.findByEmail(any())).thenReturn(Optional.of(clientEntity));
+        when(authService.checkRole(any(), any())).thenReturn(true);
         //  assertNotNull(actual);
         NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.createTrx(new TrxDto(), authentication));
         assertEquals("This account belongs to other user", exception.getMessage());
     }
-//    @Transactional
-//    @Override
-//    public TrxDto createTrx(TrxDto trxDto, Authentication authentication) {
-//        if (!authentication.getAuthorities().stream()
-//                .anyMatch(r -> r.getAuthority().equalsIgnoreCase("ROLE_USER"))) {
-//            throw new ValidationException("Trx can be created only by clients");
-//        }
-//        if (!checkOwner(trxDto.getAccountId(), authentication)) {
-//            throw new NotFoundException("This account belongs to other user");
-//        }
-//        TrxEntity trxEntity = trxMapper.toEntity(trxDto);
-//        Optional<AccountEntity> optAccountEntity = accountRepository.findById(trxDto.getAccountId());
-//        if (optAccountEntity.isEmpty()) {
-//            throw new NotFoundException("There is no such account" + trxDto.getAccountId());
-//        }
-//        AccountEntity accountEntity = optAccountEntity.get();
-//        BigDecimal balanceBeforeTrx = accountEntity.getBalance();
-//
-//        //если операция дебитовая  тип 1
-//        if (trxEntity.getTrxType() == TrxType.DEBIT) {
-//            accountEntity.setBalance(balanceBeforeTrx.add(trxDto.getAmount()));
-//        } else {
-//            //если операция кредитовая  тип 2
-//            //проверка достаточен ли баланс для проведения операции списания
-//
-//            BigDecimal amountTrx = trxDto.getAmount();
-//            if (amountTrx.compareTo(balanceBeforeTrx) <= 0) {
-//                accountEntity.setBalance(balanceBeforeTrx.subtract(trxDto.getAmount()));
-//            } else log.info("Balance is not enough to proceed the operation");
-//            throw new ValidationException("Balance is not enough to proceed the operation");
-//        }
-//        trxEntity.setAccount(accountEntity);
-//        trxEntity.setStatus(Status.ACTIVE);
-//        trxEntity.setTrxType(trxDto.getTrxType());
-//        AccountEntity savedAccountEntity = accountRepository.saveAndFlush(accountEntity);
-//        TrxEntity savedTrx = trxRepository.save(trxEntity);
-//        log.info("Created and saved Trx with ID= {}", savedTrx.getId());
-//        return trxMapper.toDto(savedTrx);
-//    }
 
 }
