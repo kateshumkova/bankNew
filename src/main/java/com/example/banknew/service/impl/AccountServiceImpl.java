@@ -46,11 +46,10 @@ public class AccountServiceImpl implements AccountService {
     @Override
     public AccountDto getById(Long id) {
         Optional<AccountEntity> optAccountEntity = accountRepository.findById(id);
-        if (optAccountEntity.isPresent()) {
-            return accountMapper.toDto(optAccountEntity.get());
-        } else {
+        if (optAccountEntity.isEmpty()) {
             throw new NotFoundException("Account id = " + id + " is not found");
         }
+        return accountMapper.toDto(optAccountEntity.get());
     }
 
     @Override
@@ -58,11 +57,10 @@ public class AccountServiceImpl implements AccountService {
         List<AccountEntity> accountEntities = accountRepository.findByName(name);
         if (accountEntities.isEmpty()) {
             throw new NotFoundException("Account with name = " + name + " is not found");
-        } else {
-            return accountEntities.stream()
-                    .map(accountMapper::toDto)
-                    .toList();
         }
+        return accountEntities.stream()
+                .map(accountMapper::toDto)
+                .toList();
     }
 
     @Transactional
@@ -79,31 +77,27 @@ public class AccountServiceImpl implements AccountService {
     }
 
     @Override
-    public AccountEntity updateAccount(Long id, AccountDto accountDto) {
+    public AccountDto updateAccount(Long id, AccountDto accountDto) {
         Optional<AccountEntity> optAccountEntity = accountRepository.findById(id);
-        if (optAccountEntity.isPresent()) {
-            AccountEntity accountEntity = optAccountEntity.get();
-            accountMapper.updateEntity(accountEntity, accountDto);
-            accountRepository.save(accountEntity);
-            log.info("Account with ID {} is updated ", id);
-            return accountEntity;
+        if (optAccountEntity.isEmpty()) {
+            throw new NotFoundException("Account id = " + id + " ,cannot be updated, id is not found");
         }
-        throw new NotFoundException("Account id = " + id + " ,cannot be updated, id is not found");
-
+        AccountEntity accountEntity = optAccountEntity.get();
+        accountMapper.updateEntity(accountEntity, accountDto);
+        accountRepository.save(accountEntity);
+        log.info("Account with ID {} is updated ", id);
+        return accountMapper.toDto(accountEntity);
     }
 
     @Override
     public void deleteAccount(Long id) {
         Optional<AccountEntity> optAccountEntity = accountRepository.findById(id);
-        if (optAccountEntity.isPresent()) {
-            AccountEntity accountEntity = optAccountEntity.get();
-            accountEntity.setStatus(Status.INACTIVE);
-            accountRepository.save(accountEntity);
-            log.info("Status of account id = {} is changed to inactive or 0", id);
-            return;
+        if (optAccountEntity.isEmpty()) {
+            throw new NotFoundException("Account id is not found");
         }
-        throw new NotFoundException("Account id = " + id + " is not found");
-
+        AccountEntity accountEntity = optAccountEntity.get();
+        accountEntity.setStatus(Status.INACTIVE);
+        accountRepository.save(accountEntity);
+        log.info("Status of account id = {} is changed to inactive or 0", id);
     }
-
 }

@@ -5,6 +5,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.Column;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -24,13 +25,16 @@ public class AgreementDto {
     private Long productId;
     @Schema(description = "id менеджера, который ведет договор", example = "3")
     private Long managerId;
+
+    @PositiveOrZero(message = "Balance must be greater than 0!")
     @Schema(description = "Годовой размер процентной ставки по продукту", example = "6,5")
     private double interestRate;
+
     @Schema(description = "Статус договора Active or inactive", example = "ACTIVE")
-    //private int status;
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @PositiveOrZero(message = "Balance must be greater than 0!")
     @Schema(description = "Сумма договора", example = "10000000")
     private BigDecimal sum;
 }

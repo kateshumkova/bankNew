@@ -7,7 +7,9 @@ import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExceptionHandler;
 
-    @RestControllerAdvice
+import java.nio.file.AccessDeniedException;
+
+@RestControllerAdvice
     @Slf4j
     public class GlobalHandlerException extends ResponseEntityExceptionHandler {
 
@@ -23,6 +25,11 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
             return new ResponseEntity<>(ex.getMessage(), HttpStatus.BAD_REQUEST);
         }
 
+        @ExceptionHandler({AccessDeniedException.class})
+        public ResponseEntity<Object> handleAccessDeniedException(Exception ex) {
+            log.error("Error 403 {}", ex.getMessage());
+            return new ResponseEntity<>(ex.getMessage(), HttpStatus.FORBIDDEN);
+        }
 
 
     }

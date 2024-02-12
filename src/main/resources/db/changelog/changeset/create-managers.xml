@@ -17,6 +17,10 @@
         <constraints nullable="false"/>
       </column>
 
+      <column name="email" type="varchar(50)">
+        <constraints unique="true" nullable="false"/>
+      </column>
+
       <column name="status" type="ENUM('ACTIVE', 'INACTIVE')">
         <constraints nullable="false"/>
       </column>

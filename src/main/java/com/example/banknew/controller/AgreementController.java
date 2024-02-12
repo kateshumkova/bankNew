@@ -78,7 +78,7 @@ public class AgreementController {
                     content = @Content)})
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MANAGER')")
     @PutMapping("/{id}")
-    public AgreementEntity update(@Parameter(description = "id договора, который надо обновить", example = "2") @PathVariable Long id, @RequestBody AgreementDto agreementDto) {
+    public AgreementDto update(@Parameter(description = "id договора, который надо обновить", example = "2") @PathVariable Long id, @RequestBody AgreementDto agreementDto) {
         return agreementService.updateAgreement(id, agreementDto);
     }
 

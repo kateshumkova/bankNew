@@ -19,6 +19,8 @@ public class ManagerDto {
     private String firstName;
     @Schema(description = "Фамилия менеджера", example = "Пушкин")
     private String lastName;
+    @Schema(description = "Email менеджера, уникальное поле", example = "ivanov@gmail.com")
+    private String email;
     @Schema(description = "Статус менеджера Active - трудоустроенный или inactive - уволенный", example = "ACTIVE")
     //private int status;
     @Enumerated(EnumType.STRING)

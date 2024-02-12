@@ -29,17 +29,9 @@ public class ProductServiceImpl implements ProductService {
     private final ProductRepository productRepository;
     private final ProductMapper productMapper;
 
-    @Override
-    public boolean validateOptProduct(Optional<ProductEntity> optProductEntity) {
 
-        if (optProductEntity.isEmpty()) {
-            throw new ValidationException("No such product");
-        }
-        return true;
-    }
     @Override
     public List<ProductDto> getAll() {
-
         return productRepository.findAll().stream()
                 .map(productMapper::toDto)
                 .toList();
@@ -48,56 +40,50 @@ public class ProductServiceImpl implements ProductService {
     @Override
     public ProductDto getById(Long id) {
         Optional<ProductEntity> optProductEntity = productRepository.findById(id);
-        if (optProductEntity.isPresent()) {
-            return productMapper.toDto(optProductEntity.get());
-        } else {
+        if (optProductEntity.isEmpty()) {
             throw new NotFoundException("Product " + id + " is not found");
         }
+        return productMapper.toDto(optProductEntity.get());
     }
 
     @Override
     public List<ProductDto> findByName(String name) {
         List<ProductEntity> productEntities = productRepository.findByName(name);
         if (productEntities.isEmpty()) {
-            throw new NotFoundException("Product with name" + name + " is not found");
-        } else {
-            return productEntities.stream()
-                    .map(productMapper::toDto)
-                    .toList();
+            throw new NotFoundException("Product with name " + name + " is not found");
         }
+        return productEntities.stream()
+                .map(productMapper::toDto)
+                .toList();
     }
 
     @Override
-    public ProductDto createProduct(ProductDto clientDto) {
-        ProductEntity savedClient = productRepository.save(productMapper.toEntity(clientDto));
-        log.info("Created and saved product with ID= {}", savedClient.getId());
-        return productMapper.toDto(savedClient);
-    }
-
+    public ProductDto createProduct(ProductDto productDto) {
+        ProductEntity savedProduct = productRepository.save(productMapper.toEntity(productDto));
+        log.info("Created and saved product with ID= {}", savedProduct.getId());
+        return productMapper.toDto(savedProduct);}
     @Override
-    public ProductEntity updateProduct(Long id, ProductDto productDto) {
+    public ProductDto updateProduct(Long id, ProductDto productDto) {
         Optional<ProductEntity> optProductEntity = productRepository.findById(id);
-        if (optProductEntity.isPresent()) {
-            ProductEntity productEntity = optProductEntity.get();
-            productMapper.updateEntity(productEntity, productDto);
-            productRepository.save(productEntity);
-            log.info("Product with ID {} is updated", id);
-            return productEntity;
+        if (optProductEntity.isEmpty()) {
+            throw new NotFoundException("Product cannot be updated, " + id + " is not found");
         }
-        throw new NotFoundException("Product cannot be updated, " + id + " is not found");
-
+        ProductEntity productEntity = optProductEntity.get();
+        productMapper.updateEntity(productEntity, productDto);
+        productRepository.save(productEntity);
+        log.info("Product with ID {} is updated", id);
+        return productMapper.toDto(productEntity);
     }
 
     @Override
     public void deleteProduct(Long id) {
         Optional<ProductEntity> optProductEntity = productRepository.findById(id);
-        if (optProductEntity.isPresent()) {
-           ProductEntity productEntity = optProductEntity.get();
-            productEntity.setStatus(Status.INACTIVE);
-            productRepository.save(productEntity);
-           // productRepository.deleteById(id);
-            return;
+        if (optProductEntity.isEmpty()) {
+            throw new NotFoundException("Product " + id + " is not found");
         }
-        throw new NotFoundException("Product " + id + " is not found");
+        ProductEntity productEntity = optProductEntity.get();
+        productEntity.setStatus(Status.INACTIVE);
+        productRepository.save(productEntity);
+        // productRepository.deleteById(id);
     }
 }

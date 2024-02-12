@@ -5,6 +5,7 @@ import com.example.banknew.enums.TrxType;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -18,6 +19,8 @@ public class TrxDto {
     @Schema(description = "Статус трансакции Active - или inactive - удаленная", example = "ACTIVE")
     @Enumerated(EnumType.STRING)
     private TrxType trxType;
+
+    @PositiveOrZero(message = "Amount must be greater than 0!")
     @Schema(description = "Сумма трансакции", example = "3600")
     private BigDecimal amount;
     @Schema(description = "Описание трансакции", example = "пополнение счета по договору 4848")

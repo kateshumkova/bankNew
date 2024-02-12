@@ -12,7 +12,7 @@ public interface ClientService {
     // ClientDto getByEmail(String email);
     List<ClientDto> findByLastName(String lastName);
     ClientDto createClient(CreateClientRequest creationRequestClientDto);
-    ClientEntity updateClient(Long id, ClientDto clientDto);
+    ClientDto updateClient(Long id, ClientDto clientDto);
     void deleteClient(Long id);
 
 

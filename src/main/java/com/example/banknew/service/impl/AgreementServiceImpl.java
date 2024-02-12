@@ -2,6 +2,7 @@ package com.example.banknew.service.impl;
 
 import com.example.banknew.dtos.*;
 import com.example.banknew.entities.*;
+import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.*;
@@ -51,14 +52,13 @@ public class AgreementServiceImpl implements AgreementService {
     }
 
     @Override
-    public AgreementDto getById(Long id) {
+    public AgreementDto findById(Long id) {
         Optional<AgreementEntity> optAgreementEntity = agreementRepository.findById(id);
-        if (optAgreementEntity.isPresent()) {
-            return agreementMapper.toDto(optAgreementEntity.get());
-        } else {
+        if (optAgreementEntity.isEmpty()) {
             log.info("Agreement id ={} is not found", id);
             throw new NotFoundException("Agreement not found");
         }
+        return agreementMapper.toDto(optAgreementEntity.get());
     }
 
     @Override
@@ -67,37 +67,32 @@ public class AgreementServiceImpl implements AgreementService {
         if (agreementEntities.isEmpty()) {
             log.info("There is no Agreement for client id ={}", id);
             throw new NotFoundException("Agreement for client id doesn't exist");
-        } else {
-            return agreementEntities.stream()
-                    .map(agreementMapper::toDto)
-                    .toList();
         }
+        return agreementEntities.stream()
+                .map(agreementMapper::toDto)
+                .toList();
     }
 
     @Override
     public List<AgreementDto> findAllActive() {
-        List<AgreementEntity> agreementEntities = agreementRepository.findByStatus(1);
+        List<AgreementEntity> agreementEntities = agreementRepository.findByStatus(ACTIVE.ordinal());
         if (agreementEntities.isEmpty()) {
-            log.info("There is no active Agreements");
-            throw new NotFoundException("There is no active Agreements");
-        } else {
-            return agreementEntities.stream()
-                    .map(agreementMapper::toDto)
-                    .toList();
+            log.info("There are no active Agreements");
+            throw new NotFoundException("There are no active Agreements");
         }
+        return agreementEntities.stream()
+                .map(agreementMapper::toDto)
+                .toList();
     }
 
     @Override
-    public List<AgreementDto> findByAccountId(Long id) {
-        List<AgreementEntity> agreementEntities = agreementRepository.findByAccountId(id);
-        if (agreementEntities.isEmpty()) {
+    public AgreementDto findByAccountId(Long id) {
+        Optional<AgreementEntity> optAgreementEntity = Optional.ofNullable(agreementRepository.findByAccountId(id));
+        if (optAgreementEntity.isEmpty()) {
             log.info("There is no Agreement with account id ={}", id);
             throw new NotFoundException("Agreement for this account id doesn't exist");
-        } else {
-            return agreementEntities.stream()
-                    .map(agreementMapper::toDto)
-                    .toList();
         }
+        return agreementMapper.toDto(optAgreementEntity.get());
     }
 
     @Override
@@ -106,24 +101,21 @@ public class AgreementServiceImpl implements AgreementService {
         if (agreementEntities.isEmpty()) {
             log.info("There is no Agreement for product id ={}", id);
             throw new NotFoundException("Agreement with this product id doesn't exist");
-        } else {
-            return agreementEntities.stream()
-                    .map(agreementMapper::toDto)
-                    .toList();
         }
+        return agreementEntities.stream()
+                .map(agreementMapper::toDto)
+                .toList();
     }
 
     @Override
     public List<AgreementDto> findByManagerId(Long id) {
         List<AgreementEntity> agreementEntities = agreementRepository.findByManagerId(id);
         if (agreementEntities.isEmpty()) {
-            throw new NotFoundException("There are no Agreements with this manager id"
-                    + id);
-        } else {
-            return agreementEntities.stream()
-                    .map(agreementMapper::toDto)
-                    .toList();
+            throw new NotFoundException("There are no Agreements with this manager id");
         }
+        return agreementEntities.stream()
+                .map(agreementMapper::toDto)
+                .toList();
     }
 
     @Transactional
@@ -182,34 +174,30 @@ public class AgreementServiceImpl implements AgreementService {
 
 
     @Override
-    public AgreementEntity updateAgreement(Long id, AgreementDto clientDto) {
+    public AgreementDto updateAgreement(Long id, AgreementDto agreementDto) {
         Optional<AgreementEntity> optAgreementEntity = agreementRepository.findById(id);
-        if (optAgreementEntity.isPresent()) {
-            AgreementEntity clientEntity = optAgreementEntity.get();
-            agreementMapper.updateEntity(clientEntity, clientDto);
-            agreementRepository.save(clientEntity);
-            log.info("Agreement with ID {} is updated ", id);
-            return clientEntity;
+        if (optAgreementEntity.isEmpty()) {
+            throw new NotFoundException("Agreement cannot be updated, " + id + " is not found");
         }
-        throw new NotFoundException("Agreement cannot be updated, " + id + " is not found");
-
+        AgreementEntity agreementEntity = optAgreementEntity.get();
+        agreementMapper.updateEntity(agreementEntity, agreementDto);
+        agreementRepository.save(agreementEntity);
+        log.info("Agreement with ID {} is updated ", id);
+        return agreementMapper.toDto(agreementEntity);
     }
 
     @Transactional
     @Override
     public void deleteAgreement(Long id) {
         Optional<AgreementEntity> optAgreementEntity = agreementRepository.findById(id);
-        if (optAgreementEntity.isPresent()) {
-            AgreementEntity agreementEntity = optAgreementEntity.get();
-            agreementEntity.setStatus(INACTIVE);
-            agreementRepository.save(agreementEntity);
-            accountService.deleteAccount(agreementEntity.getAccount().getId());
-
-            log.info("Status of agreement id = {} is changed to inactive or 0 ", id);
-            return;
+        if (optAgreementEntity.isEmpty()) {
+            throw new NotFoundException("Agreement cannot be deleted, " + id + " is not found");
         }
-        throw new NotFoundException("Agreement cannot be deleted, " + id + " is not found");
-
+        AgreementEntity agreementEntity = optAgreementEntity.get();
+        agreementEntity.setStatus(INACTIVE);
+        agreementRepository.save(agreementEntity);
+        accountService.deleteAccount(agreementEntity.getAccount().getId());
+        log.info("Status of agreement id = {} is changed to inactive or 0 ", id);
     }
 
 

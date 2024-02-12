@@ -29,7 +29,6 @@ public class AccountEntity {
     @Column(name = "status")
     private Status status;
 
-    @PositiveOrZero(message = "Balance must be greater than 0!")
     @Column(name = "balance")
     private BigDecimal balance;
 

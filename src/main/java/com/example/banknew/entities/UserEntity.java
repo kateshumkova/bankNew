@@ -17,7 +17,7 @@ public class UserEntity implements UserDetails {
     private Long id;
     @Column(name = "username")
     private String username;
-
+//add status
     @Column(name = "password")
     private String password;
 

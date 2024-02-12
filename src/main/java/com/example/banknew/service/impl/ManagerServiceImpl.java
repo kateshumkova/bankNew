@@ -26,7 +26,6 @@ public class ManagerServiceImpl implements ManagerService {
 
     @Override
     public List<ManagerDto> getAll() {
-
         return managerRepository.findAll().stream()
                 .map(managerMapper::toDto)
                 .toList();
@@ -35,12 +34,11 @@ public class ManagerServiceImpl implements ManagerService {
     @Override
     public ManagerDto getById(Long id) {
         Optional<ManagerEntity> optManagerEntity = managerRepository.findById(id);
-        if (optManagerEntity.isPresent()) {
-            return managerMapper.toDto(optManagerEntity.get());
-        } else {
+        if (optManagerEntity.isEmpty()) {
             log.info("Manager id ={} is not found", id);
             throw new NotFoundException("Manager not found");
         }
+        return managerMapper.toDto(optManagerEntity.get());
     }
 
     @Override
@@ -49,46 +47,47 @@ public class ManagerServiceImpl implements ManagerService {
         if (managerEntities.isEmpty()) {
             log.info("Manager with lastName ={} is not found", lastName);
             throw new NotFoundException("Manager with this lastName not found");
-        } else {
-            return managerEntities.stream()
-                    .map(managerMapper::toDto)
-                    .toList();
         }
+        return managerEntities.stream()
+                .map(managerMapper::toDto)
+                .toList();
     }
 
     @Override
     public ManagerDto createManager(ManagerDto managerDto) {
+        Optional<ManagerEntity> optManager = managerRepository.findByEmail(managerDto.getEmail());
+        if (optManager.isPresent()) {
+            throw new NotFoundException("Email is occupied, new manager cannot be created");
+        }
         ManagerEntity savedManager = managerRepository.save(managerMapper.toEntity(managerDto));
         log.info("Created and saved manager with ID= {}", savedManager.getId());
         return managerMapper.toDto(savedManager);
     }
 
     @Override
-    public ManagerEntity updateManager(Long id, ManagerDto managerDto) {
+    public ManagerDto updateManager(Long id, ManagerDto managerDto) {
         Optional<ManagerEntity> optManagerEntity = managerRepository.findById(id);
-        if (optManagerEntity.isPresent()) {
-            ManagerEntity managerEntity = optManagerEntity.get();
-            managerMapper.updateEntity(managerEntity, managerDto);
-            managerRepository.save(managerEntity);
-            log.info("Manager with ID {} is updated", id);
-            return managerEntity;
+        if (optManagerEntity.isEmpty()) {
+            throw new NotFoundException("Manager " + id + " cannot be updated, " +
+                    "id is not found");
         }
-        throw new NotFoundException("Manager " + id + "cannot be updated, " +
-                "id is not found");
+        ManagerEntity managerEntity = optManagerEntity.get();
+        managerMapper.updateEntity(managerEntity, managerDto);
+        managerRepository.save(managerEntity);
+        log.info("Manager with ID {} is updated", id);
+        return managerMapper.toDto(managerEntity);
     }
 
     @Override
     public void deleteManager(Long id) {
         Optional<ManagerEntity> optManagerEntity = managerRepository.findById(id);
-        if (optManagerEntity.isPresent()) {
-            //managerRepository.deleteById(id);
-            ManagerEntity managerEntity = optManagerEntity.get();
-            managerEntity.setStatus(Status.INACTIVE);
-            managerRepository.save(managerEntity);
-            return;
+        if (optManagerEntity.isEmpty()) {
+            throw new NotFoundException("Manager " + id + " not found");
         }
-        throw new NotFoundException("Manager " + id + "not found");
+        //managerRepository.deleteById(id);
+        ManagerEntity managerEntity = optManagerEntity.get();
+        managerEntity.setStatus(Status.INACTIVE);
+        managerRepository.save(managerEntity);
     }
-
 }
 

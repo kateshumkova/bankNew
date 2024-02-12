@@ -60,5 +60,6 @@ public class ClientEntity {
 
     @OneToOne
     @JoinColumn(name = "user_id")
+    //atribute
     private UserEntity user;
 }

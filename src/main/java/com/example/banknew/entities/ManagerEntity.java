@@ -25,6 +25,9 @@ public class ManagerEntity {
     @Column(name = "last_name")
     private String lastName;
 
+    @Column(name = "email")
+    private String email;
+
     @Enumerated(EnumType.STRING)
     @Column(name = "status")
     private Status status;

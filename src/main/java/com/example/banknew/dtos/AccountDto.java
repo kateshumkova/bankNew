@@ -4,6 +4,7 @@ import com.example.banknew.enums.Status;
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.persistence.EnumType;
 import jakarta.persistence.Enumerated;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -26,6 +27,7 @@ public class AccountDto {
     @Enumerated(EnumType.STRING)
     private Status status;
 
+    @PositiveOrZero(message = "Balance must be greater than 0!")
     @Schema(description = "Баланс счета, изменяется сразу после проведения транзакции", example = "10000000")
     private BigDecimal balance;
    // @Schema(description = "Валюта счета: RUB 1, EUR 10, USD 7", example = "1")

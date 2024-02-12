@@ -13,7 +13,7 @@
       </column>
 
       <column name="account_id" type="bigint">
-        <constraints nullable="false" foreignKeyName="fk_accounts_agreements" references="accounts(id)"/>
+        <constraints unique="true" nullable="false" foreignKeyName="fk_accounts_agreements" references="accounts(id)"/>
       </column>
 
       <column name="product_id" type="bigint">

@@ -97,7 +97,7 @@ public class ManagerController {
             @ApiResponse(responseCode = "404", description = "Данные менеджера не обновлены",
                     content = @Content)})
     @PutMapping("/{id}")
-    public ManagerEntity update(@Parameter(description = "id менеджера, которого надо обновить", example = "2") @PathVariable Long id, @RequestBody ManagerDto managerDto) {
+    public ManagerDto update(@Parameter(description = "id менеджера, которого надо обновить", example = "2") @PathVariable Long id, @RequestBody ManagerDto managerDto) {
         return managerService.updateManager(id, managerDto);
     }
 

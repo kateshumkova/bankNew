@@ -14,7 +14,7 @@ public interface AgreementRepository extends JpaRepository<AgreementEntity, Long
     Optional<AgreementEntity> findById(Long id);
 
 
-    List<AgreementEntity> findByAccountId(Long id);
+    AgreementEntity findByAccountId(Long id);
 
     List<AgreementEntity> findByProductId(Long id);
 

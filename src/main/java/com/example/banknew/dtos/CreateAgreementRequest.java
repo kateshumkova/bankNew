@@ -3,6 +3,7 @@ package com.example.banknew.dtos;
 import java.math.BigDecimal;
 
 import io.swagger.v3.oas.annotations.media.Schema;
+import jakarta.validation.constraints.PositiveOrZero;
 import lombok.Getter;
 import lombok.Setter;
 
@@ -22,8 +23,10 @@ public class CreateAgreementRequest {
     private Long managerId;
     @Schema(description = "Банковский продукт, на который заключается договор", example = "Пенсионный вклад")
     private Long productId;
+    @PositiveOrZero(message = "Sum must be greater than 0!")
     @Schema(description = "Сумма договора", example = "10000000")
     private BigDecimal sum;
+    @PositiveOrZero(message = "Duration must be greater than 0!")
     @Schema(description = "Срок договора в месяцах", example = "12")
     private int duration;
 
