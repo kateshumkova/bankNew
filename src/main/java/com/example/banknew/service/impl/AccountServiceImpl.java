@@ -2,9 +2,8 @@ package com.example.banknew.service.impl;
 
 import com.example.banknew.dtos.CreateAgreementRequest;
 import com.example.banknew.dtos.AccountDto;
-import com.example.banknew.entities.AccountEntity;
-import com.example.banknew.entities.ClientEntity;
-import com.example.banknew.entities.ProductEntity;
+import com.example.banknew.entities.*;
+import com.example.banknew.enums.PaymentStatus;
 import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.mappers.AccountMapper;
@@ -38,9 +37,7 @@ public class AccountServiceImpl implements AccountService {
 
     @Override
     public List<AccountDto> getAll() {
-        return accountRepository.findAll().stream()
-                .map(accountMapper::toDto)
-                .toList();
+        return accountRepository.findAll().stream().map(accountMapper::toDto).toList();
     }
 
     @Override
@@ -58,9 +55,7 @@ public class AccountServiceImpl implements AccountService {
         if (accountEntities.isEmpty()) {
             throw new NotFoundException("Account with name = " + name + " is not found");
         }
-        return accountEntities.stream()
-                .map(accountMapper::toDto)
-                .toList();
+        return accountEntities.stream().map(accountMapper::toDto).toList();
     }
 
     @Transactional

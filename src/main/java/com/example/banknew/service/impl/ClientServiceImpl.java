@@ -70,6 +70,7 @@ public class ClientServiceImpl implements ClientService {
         if (optClientEntity.isEmpty()) {
             ClientEntity clientEntity = clientMapper.toEntity(creationRequestClientDto);
             clientEntity.setCreatedAt(Instant.now());
+            clientEntity.setStatus(Status.ACTIVE);
             userRepository.findByUsername(creationRequestClientDto.getEmail()).ifPresentOrElse(clientEntity::setUser, () -> {
                 throw new NotFoundException("No such username-email in repository");
             });

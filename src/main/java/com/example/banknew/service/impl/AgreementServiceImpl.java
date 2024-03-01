@@ -9,6 +9,7 @@ import com.example.banknew.mappers.*;
 import com.example.banknew.repository.*;
 import com.example.banknew.service.AccountService;
 import com.example.banknew.service.AgreementService;
+import com.example.banknew.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -42,6 +43,7 @@ public class AgreementServiceImpl implements AgreementService {
     private final ManagerRepository managerRepository;
     private final ManagerMapper managerMapper;
     private final AccountService accountService;
+    private final ScheduleService scheduleService;
 
 
     @Override
@@ -87,7 +89,7 @@ public class AgreementServiceImpl implements AgreementService {
 
     @Override
     public AgreementDto findByAccountId(Long id) {
-        Optional<AgreementEntity> optAgreementEntity = Optional.ofNullable(agreementRepository.findByAccountId(id));
+        Optional<AgreementEntity> optAgreementEntity = agreementRepository.findByAccountId(id);
         if (optAgreementEntity.isEmpty()) {
             log.info("There is no Agreement with account id ={}", id);
             throw new NotFoundException("Agreement for this account id doesn't exist");
@@ -168,6 +170,8 @@ public class AgreementServiceImpl implements AgreementService {
         createAgreementResponse.setManagerDto(managerMapper.toDto(managerEntity));
 
         log.info("Agreement with ID " + savedAgreementEntity.getId() + " is created");
+
+        scheduleService.createScheduleForInterestPayment(accountEntity);
 
         return createAgreementResponse;
     }

@@ -58,7 +58,7 @@ public class TrxServiceImpl implements TrxService {
         ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
                 .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
         List<AgreementEntity> agreementEntities = agreementRepository.findByClientId(clientEntity.getId());
-        var listOfAccountId = agreementEntities.stream().map(ae -> ae.getAccount().getId()).toList();
+        List<Long> listOfAccountId = agreementEntities.stream().map(ae -> ae.getAccount().getId()).toList();
         if (!listOfAccountId.contains(accountId)) {
             log.info("This account belongs to other user");
             return false;
@@ -102,21 +102,16 @@ public class TrxServiceImpl implements TrxService {
             return trxMapper.toDto(optTrxEntity.get());
         }
     }
-
     @Override
     public List<TrxDto> findByAccountId(Long accountId, Authentication authentication) {
         if (authService.checkRole(authentication, "ROLE_USER")) {
             if (!checkOwner(accountId, authentication)) {
-                throw new NotFoundException("This account belongs to other user");
-            }
+                throw new NotFoundException("This account belongs to other user");}
             return returnListOfTrxForAccount(accountId);
-        } else //if (authService.checkRole(authentication, "ROLE_MANAGER")
-               // || authService.checkRole(authentication, "ROLE_ADMIN")) {
-        { return returnListOfTrxForAccount(accountId);
-
+        } else {
+            return returnListOfTrxForAccount(accountId);
         }
     }
-
     @Override
     public List<TrxDto> findByStatus(Authentication authentication, Long accountId, Status status) {
 
@@ -124,7 +119,6 @@ public class TrxServiceImpl implements TrxService {
             if (!checkOwner(accountId, authentication)) {
                 throw new NotFoundException("This account belongs to other user");
             }
-
             List<TrxEntity> trxEntities = trxRepository.findByStatus(status);
             if (trxEntities.isEmpty()) {
                 throw new NotFoundException("There is no trx with status " + status);
@@ -142,7 +136,6 @@ public class TrxServiceImpl implements TrxService {
                     .toList();
         }
     }
-
     @Transactional
     @Override
     @UserAccess
