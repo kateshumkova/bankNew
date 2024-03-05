@@ -63,15 +63,6 @@ class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
-//todo
-    //nado li propisivat NF Exception if list is empty
-//    @WithMockUser(roles = "MANAGER")
-//    @Test
-//    void getAll_shouldReturn404() throws Exception {
-//        when(productService.getAll()).thenReturn(null);
-//        mvc.perform(get("/api/product/"))
-//                .andExpect(status().isNotFound());
-//    }
 
     @WithMockUser(roles = "MANAGER")
     @Test

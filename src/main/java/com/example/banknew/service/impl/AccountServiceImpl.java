@@ -1,18 +1,13 @@
 package com.example.banknew.service.impl;
 
-import com.example.banknew.dtos.CreateAgreementRequest;
 import com.example.banknew.dtos.AccountDto;
 import com.example.banknew.entities.*;
-import com.example.banknew.enums.PaymentStatus;
 import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.mappers.AccountMapper;
 import com.example.banknew.mappers.AgreementMapper;
 import com.example.banknew.mappers.ClientMapper;
-import com.example.banknew.repository.AccountRepository;
-import com.example.banknew.repository.AgreementRepository;
-import com.example.banknew.repository.ClientRepository;
-import com.example.banknew.repository.ProductRepository;
+import com.example.banknew.repository.*;
 import com.example.banknew.service.AccountService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -20,8 +15,11 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+
+import static com.example.banknew.enums.PaymentStatus.*;
 
 @Service
 @RequiredArgsConstructor
@@ -34,6 +32,7 @@ public class AccountServiceImpl implements AccountService {
     private final ClientRepository clientRepository;
     private final ProductRepository productRepository;
     private final ClientMapper clientMapper;
+    private final ScheduleRepository scheduleRepository;
 
     @Override
     public List<AccountDto> getAll() {
@@ -84,6 +83,7 @@ public class AccountServiceImpl implements AccountService {
         return accountMapper.toDto(accountEntity);
     }
 
+    @Transactional
     @Override
     public void deleteAccount(Long id) {
         Optional<AccountEntity> optAccountEntity = accountRepository.findById(id);
@@ -93,6 +93,16 @@ public class AccountServiceImpl implements AccountService {
         AccountEntity accountEntity = optAccountEntity.get();
         accountEntity.setStatus(Status.INACTIVE);
         accountRepository.save(accountEntity);
-        log.info("Status of account id = {} is changed to inactive or 0", id);
+        List<ScheduleEntity> scheduleEntities = scheduleRepository.findByAccountId(id);
+
+        for (int i = 0; i < scheduleEntities.size(); i++) {
+            ScheduleEntity scheduleEntity = scheduleEntities.get(i);
+            if ((scheduleEntity.getAccount().getStatus() == Status.INACTIVE) && (scheduleEntity.getDateOfPayment().isAfter(LocalDate.now()))) {
+                scheduleEntity.setPaymentStatus(CANCELED);
+                scheduleRepository.save(scheduleEntity);
+                log.info("Status of account id = {} is changed to inactive or 0", id);
+                log.info("Schedule of Interest Payments is changed, because of account closing");
+            }
+        }
     }
 }

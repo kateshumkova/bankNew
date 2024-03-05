@@ -8,14 +8,13 @@ import lombok.Setter;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import java.math.BigDecimal;
-import java.time.Instant;
 import java.time.LocalDate;
 import java.util.Date;
 
 @Getter
 @Setter
 @Entity(name="schedule")
-public class InterestRatePaymentScheduleEntity {
+public class ScheduleEntity {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     @Column(name = "id")

@@ -178,13 +178,13 @@ public class TrxServiceImpl implements TrxService {
 
     //сомневаюсь, что эти операции нужны
     @Override
-    public TrxDto updateTrx(Long id, TrxDto clientDto) {
+    public TrxDto updateTrx(Long id, TrxDto trxDto) {
         Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
         if (optTrxEntity.isEmpty()) {
-            throw new NotFoundException("Trx cannot be updated," + id + "is not found");
+            throw new NotFoundException("Trx cannot be updated, " + id + " is not found");
         }
         TrxEntity trxEntity = optTrxEntity.get();
-        trxMapper.updateEntity(trxEntity, clientDto);
+        trxMapper.updateEntity(trxEntity, trxDto);
         trxRepository.save(trxEntity);
         log.info("Trx with ID {} is updated", id);
         return trxMapper.toDto(trxEntity);
@@ -194,7 +194,7 @@ public class TrxServiceImpl implements TrxService {
     public void deleteTrx(Long id) {
         Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
         if (optTrxEntity.isEmpty()) {
-            throw new NotFoundException("Trx" + id + "is " +
+            throw new NotFoundException("Trx " + id + " is " +
                     "not found");
         }
         // trxRepository.deleteById(id);

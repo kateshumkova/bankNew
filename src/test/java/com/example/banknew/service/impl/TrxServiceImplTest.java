@@ -1,5 +1,6 @@
 package com.example.banknew.service.impl;
 
+import com.example.banknew.dtos.AccountDto;
 import com.example.banknew.dtos.TrxDto;
 import com.example.banknew.entities.*;
 import com.example.banknew.enums.Status;
@@ -140,17 +141,6 @@ class TrxServiceImplTest {
         verify(trxMapper, atLeast(1)).toDto(any());
         //  assertNotNull(actual);
     }
-//todo почему пропускает роль, которая не может дергать эту ручку
-//    @Test
-//    void testGetById_shouldNotFoundException_ifUnknownRole_ifEmptyTrx() {
-//        RoleEntity roleEntity = new RoleEntity();
-//        roleEntity.setName("ROLE_VISITOR");
-//        Authentication authentication = new UsernamePasswordAuthenticationToken(null, null, List.of(roleEntity));
-//
-//        NotFoundException exception = assertThrows(NotFoundException.class,
-//                () -> trxService.getById(1L, authentication));
-//        assertEquals("Access with such role is impossible", exception.getMessage());
-//    }
 
     @Test
     void testGetById_shouldReturnTrxDto_ifRoleUser_ifEmptyTrx() {
@@ -753,7 +743,6 @@ class TrxServiceImplTest {
 
 
     @Test
-        //todo
     void testCreateTrx_HappyPath_DebitTrx() {
          ClientEntity clientEntity = new ClientEntity();
         AccountEntity accountEntity = new AccountEntity();
@@ -853,7 +842,6 @@ class TrxServiceImplTest {
     }
 
     @Test
-        //todo
     void testCreateTrx_shouldNotFoundException_ifRoleUser_ifCheckOwnerIsFalse() {
          ClientEntity clientEntity = new ClientEntity();
         AccountEntity accountEntity = new AccountEntity();
@@ -910,5 +898,43 @@ class TrxServiceImplTest {
         NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.createTrx(new TrxDto(), createAuthentication("ROLE_USER")));
         assertEquals("This account belongs to other user", exception.getMessage());
     }
+    @Test
+    void testUpdateTrx_shouldNotFoundException_ifEmptyTrx() {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.updateTrx(1L,new TrxDto()));
+        assertEquals("Trx cannot be updated, 1 is not found", exception.getMessage());
+    }
 
+    @Test
+    void testUpdateTrx_shouldReturnTrxDto_ifPresentTrx() {
+        //заглушки
+        TrxEntity trxEntity = new TrxEntity();
+        when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
+
+        //вызов метода
+        TrxDto actual = trxService.updateTrx(1L, new TrxDto());
+
+        //проверка результата
+        verify(trxMapper, atLeast(1)).updateEntity(any(), any());
+        verify(trxRepository).save(any());
+
+    }
+
+    @Test
+    void testDeleteTrx_shouldNotFoundException_ifEmptyTrx() {
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> trxService.deleteTrx(1L));
+        assertEquals("Trx 1 is not found", exception.getMessage());
+    }
+
+    @Test
+    void testDeleteTrx_shouldChangeStatusToInactive_ifPresentTrx() {
+        //заглушки
+        TrxEntity trxEntity = new TrxEntity();
+        when(trxRepository.findById(any())).thenReturn(Optional.of(trxEntity));
+
+        //вызов метода
+        trxService.deleteTrx(1L);
+
+        //проверка результата
+        verify(trxRepository).save(any());
+    }
 }

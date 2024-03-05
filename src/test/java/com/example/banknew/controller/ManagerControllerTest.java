@@ -102,7 +102,6 @@ class ManagerControllerTest {
     @WithMockUser()
     @Test
     void getById_shouldReturn403() throws Exception {
-
         mvc.perform(get("/api/manager/1"))
                 .andExpect(status().isForbidden());
     }

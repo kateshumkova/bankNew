@@ -1,26 +1,19 @@
 package com.example.banknew.service.impl;
 
-import com.example.banknew.dtos.ProductDto;
 import com.example.banknew.entities.AccountEntity;
 import com.example.banknew.entities.AgreementEntity;
-import com.example.banknew.entities.InterestRatePaymentScheduleEntity;
 import com.example.banknew.entities.ProductEntity;
-import com.example.banknew.enums.PaymentStatus;
 import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.repository.AgreementRepository;
 import com.example.banknew.repository.ProductRepository;
 import com.example.banknew.repository.ScheduleRepository;
-import net.bytebuddy.dynamic.TypeResolutionStrategy;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
 
-import java.math.BigDecimal;
 import java.time.Instant;
-import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
@@ -51,7 +44,7 @@ class ScheduleServiceImplTest {
         when(productRepository.findById(any())).thenReturn(Optional.of(productEntity));
 
         //вызов метода
-       scheduleService.createScheduleForInterestPayment(accountEntity);
+       scheduleService.createPaymentSchedule(accountEntity);
 
         //проверка результата
         verify(scheduleRepository, atLeast(1)).save(any());
@@ -67,7 +60,7 @@ class ScheduleServiceImplTest {
         when(agreementRepository.findByAccountId(any())).thenReturn(Optional.ofNullable(null));
      //   when(productRepository.findById(any())).thenReturn(Optional.of(new ProductEntity()));
 
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> scheduleService.createScheduleForInterestPayment(accountEntity));
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> scheduleService.createPaymentSchedule(accountEntity));
         assertEquals("No agreement with such accountId", exception.getMessage());
     }
     @Test
@@ -81,7 +74,7 @@ class ScheduleServiceImplTest {
         when(agreementRepository.findByAccountId(any())).thenReturn( Optional.of(agreementEntity));
         when(productRepository.findById(any())).thenReturn(Optional.ofNullable(null));
 
-        NotFoundException exception = assertThrows(NotFoundException.class, () -> scheduleService.createScheduleForInterestPayment(accountEntity));
+        NotFoundException exception = assertThrows(NotFoundException.class, () -> scheduleService.createPaymentSchedule(accountEntity));
         assertEquals("No product with such productId", exception.getMessage());
     }
 }

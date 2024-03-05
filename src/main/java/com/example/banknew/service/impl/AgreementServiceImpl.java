@@ -2,7 +2,6 @@ package com.example.banknew.service.impl;
 
 import com.example.banknew.dtos.*;
 import com.example.banknew.entities.*;
-import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.*;
@@ -15,13 +14,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -171,7 +166,7 @@ public class AgreementServiceImpl implements AgreementService {
 
         log.info("Agreement with ID " + savedAgreementEntity.getId() + " is created");
 
-        scheduleService.createScheduleForInterestPayment(accountEntity);
+        scheduleService.createPaymentSchedule(accountEntity);
 
         return createAgreementResponse;
     }
@@ -203,6 +198,4 @@ public class AgreementServiceImpl implements AgreementService {
         accountService.deleteAccount(agreementEntity.getAccount().getId());
         log.info("Status of agreement id = {} is changed to inactive or 0 ", id);
     }
-
-
 }

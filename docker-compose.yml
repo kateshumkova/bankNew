@@ -12,12 +12,18 @@ services:
       MYSQL_DATABASE: bank
       MYSQL_USER: mysql
       MYSQL_PASSWORD: password
+    networks:
+      - bank-network
   java:
     build: .
     ports:
       - "8080:8080"
     depends_on:
       - mysql
-
+    networks:
+      - bank-network
+networks:
+  bank-network:
 volumes:
   db_data:
+

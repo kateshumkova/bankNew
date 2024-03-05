@@ -20,7 +20,7 @@
             <column name="interest_amount" type="decimal(38, 2)">
                 <constraints nullable="false"/>
             </column>
-            <column name="status" type="ENUM('PAID_OUT','NOT_PAID_OUT')">
+            <column name="status" type="ENUM('PAID_OUT','NOT_PAID_OUT','CANCELED')">
 
                 <constraints nullable="false"/>
             </column>

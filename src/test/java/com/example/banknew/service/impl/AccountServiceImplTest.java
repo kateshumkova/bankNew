@@ -1,21 +1,20 @@
 package com.example.banknew.service.impl;
 
 import com.example.banknew.dtos.AccountDto;
-import com.example.banknew.dtos.ManagerDto;
 import com.example.banknew.entities.AccountEntity;
-import com.example.banknew.entities.ManagerEntity;
+import com.example.banknew.entities.ScheduleEntity;
 import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.mappers.AccountMapper;
 import com.example.banknew.repository.AccountRepository;
-import com.example.banknew.repository.AgreementRepository;
+import com.example.banknew.repository.ScheduleRepository;
 import org.junit.jupiter.api.Test;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.springframework.boot.test.context.SpringBootTest;
-import org.springframework.transaction.annotation.Transactional;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
 
@@ -31,6 +30,8 @@ class AccountServiceImplTest {
 
     @Mock
     private AccountRepository accountRepository;
+    @Mock
+    private ScheduleRepository scheduleRepository;
     @Mock
     private AccountMapper accountMapper;
 
@@ -112,7 +113,7 @@ class AccountServiceImplTest {
         //  verify(managerMapper,atLeast(1)).toDto(any());
         verify(accountRepository).saveAndFlush(any());
         assertEquals(Status.ACTIVE, actual.getStatus());
-         assertNotNull(actual);
+        assertNotNull(actual);
     }
 
     @Test
@@ -155,5 +156,33 @@ class AccountServiceImplTest {
         // verify(accountMapper,atLeast(1)).updateEntity(any(), any());
         verify(accountRepository).save(any());
 //        assertNotNull(actual);
+    }
+
+    @Test
+    void testDeleteAccount_happyPath() {
+        //заглушки
+        AccountEntity accountEntity = new AccountEntity();
+        accountEntity.setId(1L);
+        accountEntity.setBalance(BigDecimal.valueOf(1000));
+        accountEntity.setStatus(Status.INACTIVE);
+
+        ScheduleEntity scheduleEntity = new ScheduleEntity();
+        scheduleEntity.setDateOfPayment(LocalDate.now().plusMonths(1));
+        scheduleEntity.setAccount(accountEntity);
+
+        ScheduleEntity scheduleEntity1 = new ScheduleEntity();
+        scheduleEntity1.setDateOfPayment(LocalDate.now().plusMonths(1));
+        scheduleEntity1.setAccount(accountEntity);
+
+        when(accountRepository.findById(any())).thenReturn(Optional.of(accountEntity));
+        when(scheduleRepository.findByAccountId(any())).thenReturn(List.of(scheduleEntity, scheduleEntity1));
+
+        //вызов метода
+        accountService.deleteAccount(1L);
+
+        //проверка результата
+        // verify(accountMapper,atLeast(1)).updateEntity(any(), any());
+        verify(accountRepository).save(any());
+        verify(scheduleRepository,atLeast(2)).save(any());
     }
 }

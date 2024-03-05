@@ -96,6 +96,41 @@ class TrxControllerTest {
                 .andExpect(status().isForbidden());
     }
 
+
+    @WithMockUser(roles = "USER")
+    @Test
+    void getByAccountId_shouldReturn200() throws Exception {
+
+        TrxDto trxDto = new TrxDto();
+        trxDto.setAccountId(1L);
+        trxDto.setTrxType(TrxType.DEBIT);
+        trxDto.setAmount(BigDecimal.valueOf(100));
+        trxDto.setDescription("Popolnenie");
+        when(trxService.getById(any(), any())).thenReturn(trxDto);
+        mvc.perform(get("/api/trx/search?id=1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper.writeValueAsString(trxDto)))
+                .andExpect(status().isOk());
+    }
+
+    @WithMockUser(roles = "MANAGER")
+    @Test
+    void getByAccountId_shouldReturn404() throws Exception {
+
+        when(trxService.findByAccountId(any(), any())).thenThrow(new NotFoundException("Product 1 is not found"));
+        mvc.perform(get("/api/trx/search?id=1"))
+                .andExpect(status().isNotFound());
+    }
+
+    @WithMockUser(roles = "V")
+    @Test
+    void getByAccountId_shouldReturn403() throws Exception {
+
+        when(trxService.getById(any(), any())).thenThrow(new AccessDeniedException("Access with such role is impossible"));
+        mvc.perform(get("/api/trx/search?id=1"))
+                .andExpect(status().isForbidden());
+    }
+
     @WithMockUser(roles = "USER")
     @Test
     void add_shouldReturn200() throws Exception {
@@ -182,12 +217,13 @@ class TrxControllerTest {
         trxDto.setAccountId(1L);
         trxDto.setTrxType(TrxType.DEBIT);
         trxDto.setAmount(BigDecimal.valueOf(100));
-         trxDto.setDescription("Popolnenie");
+        trxDto.setDescription("Popolnenie");
         mvc.perform(put("/api/trx/1")
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(trxDto)))
                 .andExpect(status().isForbidden());
     }
+
     @WithMockUser()
     @Test
     void update_shouldReturn400() throws Exception {
