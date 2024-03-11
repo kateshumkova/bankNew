@@ -36,7 +36,11 @@ public class TrxServiceImpl implements TrxService {
     private final ClientRepository clientRepository;
     private final AgreementRepository agreementRepository;
     private final AuthService authService;
-
+    /**
+     * Method returns a list of trxDto if it is not empty
+     * @param accountId
+     * @return List<TrxDto>
+     */
     private List<TrxDto> returnListOfTrxForAccount(Long accountId) {
         List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
         if (trxEntities.isEmpty()) {
@@ -47,8 +51,12 @@ public class TrxServiceImpl implements TrxService {
                 .toList();
     }
 
-
-    private boolean checkOwner(Long accountId, Authentication authentication) {
+    /**
+     * Method checks if the authenticated person is the owner of the account
+     * @param accountId
+     * @param authentication
+     */
+    public boolean checkOwner(Long accountId, Authentication authentication) {
         Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
 
         if (optUserEntity.isEmpty()) {

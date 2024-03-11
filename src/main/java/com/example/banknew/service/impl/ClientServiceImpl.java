@@ -61,7 +61,13 @@ public class ClientServiceImpl implements ClientService {
                 .map(clientMapper::toDto)
                 .toList();
     }
-
+    /**
+     * Method creates a Client if there is no such email in DB Clients
+     * and checks if there is an entry in DB User with the same name (email) of user
+     * to be saved to clientEntity as UserEntity
+     * @param creationRequestClientDto Dto for creation of client
+     * @return ClientDto
+     */
     @Transactional
     @Override
     public ClientDto createClient(CreateClientRequest creationRequestClientDto) {

@@ -226,15 +226,7 @@ class ProductControllerTest {
                 .andExpect(status().isOk());
         verify(productService).deleteProduct(1L);
     }
-//todo
-//    @WithMockUser(roles = "ADMIN")
-//    @Test
-//    void delete_shouldReturn404() throws Exception {
-//        when(productService.deleteProduct(any())).thenThrow(new NotFoundException(""));
-//        mvc.perform(delete("/api/product/1"))
-//                .andExpect(status().isNotFound());
-//        verify(productService).deleteProduct(1L);
-//    }
+
 
     @WithMockUser()
     @Test

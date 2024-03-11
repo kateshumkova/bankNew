@@ -35,15 +35,18 @@ public class ScheduleServiceImpl implements ScheduleService {
     private final ClientMapper clientMapper;
     private final ScheduleRepository scheduleRepository;
 
+    /**
+     * Method is creating a schedule of interest rate payout.
+     * based on a payment frequency and deposit period of the product
+     * @param accountEntity account for which schedule is creating
+     */
     @Override
     public void createPaymentSchedule(AccountEntity accountEntity) {
-        var dateOfCreationOfAccount = accountEntity.getCreatedAt();
         Optional<AgreementEntity> optAgreementEntity = agreementRepository.findByAccountId(accountEntity.getId());
         if (optAgreementEntity.isEmpty()) {
             throw new NotFoundException("No agreement with such accountId");
         }
         AgreementEntity agreementEntity = optAgreementEntity.get();
-        var maturityDate = agreementEntity.getMaturityDate();
         Optional<ProductEntity> optProductEntity = productRepository.findById(agreementEntity.getProduct().getId());
         if (optProductEntity.isEmpty()) {
             throw new NotFoundException("No product with such productId");
@@ -51,7 +54,6 @@ public class ScheduleServiceImpl implements ScheduleService {
         ProductEntity productEntity = optProductEntity.get();
 
         for (int i = productEntity.getPaymentFrequency(); i <= productEntity.getDepositPeriod(); i += productEntity.getPaymentFrequency()) {
-            productEntity.getPaymentFrequency();
             ScheduleEntity scheduleEntity = new ScheduleEntity();
             scheduleEntity.setPaymentStatus(PaymentStatus.NOT_PAID_OUT);
             scheduleEntity.setInterestAmount(BigDecimal.ZERO);

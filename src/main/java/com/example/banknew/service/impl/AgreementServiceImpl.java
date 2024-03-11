@@ -114,7 +114,12 @@ public class AgreementServiceImpl implements AgreementService {
                 .map(agreementMapper::toDto)
                 .toList();
     }
-
+    /**
+     * Method will create agreement and account for it
+     * and will change Schedule of interest payments
+     * @param createAgreementRequest DTO for agreement creation
+     * @return createAgreementResponse
+     */
     @Transactional
     public CreateAgreementResponse createAgreement(CreateAgreementRequest createAgreementRequest) {
 
@@ -184,7 +189,11 @@ public class AgreementServiceImpl implements AgreementService {
         log.info("Agreement with ID {} is updated ", id);
         return agreementMapper.toDto(agreementEntity);
     }
-
+    /**
+     * Method will change the status of agreement and account to INACTIVE
+     * and will change Schedule of interest payments
+     * @param id Agreement id
+     */
     @Transactional
     @Override
     public void deleteAgreement(Long id) {

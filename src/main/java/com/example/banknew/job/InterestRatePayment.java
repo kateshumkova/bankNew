@@ -43,9 +43,19 @@ public class InterestRatePayment {
     private final TrxRepository trxRepository;
     private final ScheduleRepository scheduleRepository;
     // private final RestTemplate restTemplate;
-
+    /**
+     * Method creates interest rate payment.
+     * It runs as cron every day and finds entities in DB table Schedule
+     * which should be paid out on this date and
+     * have status NOT_PAID_OUT and belong to Active account
+     * then entry in TRX table is created, balance in accounts table is updated
+     * finally status PAID_OUT is set in Schedule table
+     */
     @Transactional
-    @Scheduled(cron = "0 * * * * *")//"${scheduler.cron}")
+    @Scheduled(cron = "0 12 * * * ?")
+    // At 12:00 p.m. (noon) every day
+    //(cron = "0 * * * * *")//"${scheduler.cron}")
+    //to check, each minute
     public void runInterestPayment() {
         LocalDate date = LocalDate.now();
 

@@ -82,7 +82,11 @@ public class AccountServiceImpl implements AccountService {
         log.info("Account with ID {} is updated ", id);
         return accountMapper.toDto(accountEntity);
     }
-
+    /**
+     * Method will change the status of account to INACTIVE
+     * and will change Schedule of interest payments
+     * @param id Account id
+     */
     @Transactional
     @Override
     public void deleteAccount(Long id) {
