@@ -98,7 +98,6 @@ public class ProductController {
     @PutMapping("/{id}")
     public ProductDto update(@Parameter(description = "id продукта, который надо обновить", example = "2") @PathVariable Long id, @RequestBody ProductDto productDto) {
         return productService.updateProduct(id, productDto);
-        //todo mapper to dto
     }
 
     @PreAuthorize("hasAnyRole('ROLE_ADMIN','ROLE_MANAGER')")

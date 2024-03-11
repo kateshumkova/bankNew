@@ -2,25 +2,21 @@ package com.example.banknew.service.impl;
 
 import com.example.banknew.dtos.*;
 import com.example.banknew.entities.*;
-import com.example.banknew.enums.Status;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
 import com.example.banknew.mappers.*;
 import com.example.banknew.repository.*;
 import com.example.banknew.service.AccountService;
 import com.example.banknew.service.AgreementService;
+import com.example.banknew.service.ScheduleService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.sql.Timestamp;
 import java.time.Instant;
 import java.time.LocalDate;
 import java.time.ZoneId;
-import java.time.temporal.ChronoUnit;
-import java.util.Calendar;
-import java.util.GregorianCalendar;
 import java.util.List;
 import java.util.Optional;
 
@@ -42,6 +38,7 @@ public class AgreementServiceImpl implements AgreementService {
     private final ManagerRepository managerRepository;
     private final ManagerMapper managerMapper;
     private final AccountService accountService;
+    private final ScheduleService scheduleService;
 
 
     @Override
@@ -87,7 +84,7 @@ public class AgreementServiceImpl implements AgreementService {
 
     @Override
     public AgreementDto findByAccountId(Long id) {
-        Optional<AgreementEntity> optAgreementEntity = Optional.ofNullable(agreementRepository.findByAccountId(id));
+        Optional<AgreementEntity> optAgreementEntity = agreementRepository.findByAccountId(id);
         if (optAgreementEntity.isEmpty()) {
             log.info("There is no Agreement with account id ={}", id);
             throw new NotFoundException("Agreement for this account id doesn't exist");
@@ -117,7 +114,12 @@ public class AgreementServiceImpl implements AgreementService {
                 .map(agreementMapper::toDto)
                 .toList();
     }
-
+    /**
+     * Method will create agreement and account for it
+     * and will change Schedule of interest payments
+     * @param createAgreementRequest DTO for agreement creation
+     * @return createAgreementResponse
+     */
     @Transactional
     public CreateAgreementResponse createAgreement(CreateAgreementRequest createAgreementRequest) {
 
@@ -169,6 +171,8 @@ public class AgreementServiceImpl implements AgreementService {
 
         log.info("Agreement with ID " + savedAgreementEntity.getId() + " is created");
 
+        scheduleService.createPaymentSchedule(accountEntity);
+
         return createAgreementResponse;
     }
 
@@ -185,7 +189,11 @@ public class AgreementServiceImpl implements AgreementService {
         log.info("Agreement with ID {} is updated ", id);
         return agreementMapper.toDto(agreementEntity);
     }
-
+    /**
+     * Method will change the status of agreement and account to INACTIVE
+     * and will change Schedule of interest payments
+     * @param id Agreement id
+     */
     @Transactional
     @Override
     public void deleteAgreement(Long id) {
@@ -199,6 +207,4 @@ public class AgreementServiceImpl implements AgreementService {
         accountService.deleteAccount(agreementEntity.getAccount().getId());
         log.info("Status of agreement id = {} is changed to inactive or 0 ", id);
     }
-
-
 }

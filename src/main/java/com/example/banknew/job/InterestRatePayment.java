@@ -1,12 +1,16 @@
 package com.example.banknew.job;
 
-import com.example.banknew.dtos.AgreementDto;
 import com.example.banknew.entities.AccountEntity;
+import com.example.banknew.entities.AgreementEntity;
+import com.example.banknew.entities.ScheduleEntity;
 import com.example.banknew.entities.TrxEntity;
 import com.example.banknew.enums.Status;
 import com.example.banknew.enums.TrxType;
+import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.mappers.AgreementMapper;
 import com.example.banknew.repository.AccountRepository;
+import com.example.banknew.repository.AgreementRepository;
+import com.example.banknew.repository.ScheduleRepository;
 import com.example.banknew.repository.TrxRepository;
 import com.example.banknew.service.AccountService;
 import com.example.banknew.service.AgreementService;
@@ -17,8 +21,15 @@ import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
+import java.time.LocalDate;
+
 import java.util.List;
 import java.util.Optional;
+
+import static com.example.banknew.enums.PaymentStatus.NOT_PAID_OUT;
+import static com.example.banknew.enums.PaymentStatus.PAID_OUT;
+import static java.time.Instant.now;
+
 
 @Slf4j
 @RequiredArgsConstructor
@@ -28,35 +39,55 @@ public class InterestRatePayment {
     private final AccountService accountService;
     private final AccountRepository accountRepository;
     private final AgreementMapper agreementMapper;
+    private final AgreementRepository agreementRepository;
     private final TrxRepository trxRepository;
-
-    @Scheduled(cron = "0 0 L * * ?")
+    private final ScheduleRepository scheduleRepository;
+    // private final RestTemplate restTemplate;
+    /**
+     * Method creates interest rate payment.
+     * It runs as cron every day and finds entities in DB table Schedule
+     * which should be paid out on this date and
+     * have status NOT_PAID_OUT and belong to Active account
+     * then entry in TRX table is created, balance in accounts table is updated
+     * finally status PAID_OUT is set in Schedule table
+     */
     @Transactional
-    public void run() {
-        try { //to Entity
-            List<AgreementDto> agreementDtos = agreementService.findAllActive();
-            for (int i = 0; i < agreementDtos.size(); i++) {
-                AgreementDto agreementDto = agreementDtos.get(i);
-                Optional<AccountEntity> optAccountEntity = accountRepository.findById(agreementDto.getAccountId());
-                AccountEntity accountEntity = optAccountEntity.get();
+    @Scheduled(cron = "0 12 * * * ?")
+    // At 12:00 p.m. (noon) every day
+    //(cron = "0 * * * * *")//"${scheduler.cron}")
+    //to check, each minute
+    public void runInterestPayment() {
+        LocalDate date = LocalDate.now();
+
+        List<ScheduleEntity> scheduleEntities = scheduleRepository.findByDateOfPayment(date);
+        for (int i = 0; i < scheduleEntities.size(); i++) {
+            ScheduleEntity scheduleEntity = scheduleEntities.get(i);
+            AccountEntity accountEntity = scheduleEntity.getAccount();
+            Optional<AgreementEntity> optAgreementEntity = agreementRepository.findByAccountId(accountEntity.getId());
+            if (optAgreementEntity.isEmpty()) {
+                throw new NotFoundException("Agreement is not found");
+            }
+            if (accountEntity.getStatus() == Status.ACTIVE && scheduleEntity.getPaymentStatus() == NOT_PAID_OUT) {
+
                 BigDecimal currentBalance = accountEntity.getBalance();
-                BigDecimal interestRate = currentBalance.multiply(BigDecimal.valueOf(agreementMapper.toEntity(agreementDto).getInterestRate() / 100 / 12))
-                        .multiply(BigDecimal.valueOf(agreementMapper.toEntity(agreementDto).getProduct().getPaymentFrequency()));
+                AgreementEntity agreementEntity = optAgreementEntity.get();
+                BigDecimal interestAmount = currentBalance.multiply(BigDecimal.valueOf(agreementEntity.getInterestRate())).divide(BigDecimal.valueOf(100));
+                scheduleEntity.setInterestAmount(interestAmount);
+
                 TrxEntity trxEntity = new TrxEntity();
                 trxEntity.setAccount(accountEntity);
                 trxEntity.setStatus(Status.ACTIVE);
                 trxEntity.setTrxType(TrxType.DEBIT);
                 trxEntity.setDescription("Interest Rate Payout");
-                trxEntity.setAmount(interestRate);
+                trxEntity.setAmount(interestAmount);
                 TrxEntity savedTrxEntity = trxRepository.saveAndFlush(trxEntity);
 
-                accountEntity.setBalance(currentBalance.add(interestRate));
+                accountEntity.setBalance(currentBalance.add(interestAmount));
                 AccountEntity savedAccountEntity = accountRepository.saveAndFlush(accountEntity);
-
+                scheduleEntity.setPaymentStatus(PAID_OUT);
+                scheduleRepository.save(scheduleEntity);
+                // restTemplate.exchange()
             }
-
-        } catch (Exception e) {
-            log.error("Error during interest rate payout", e);
         }
     }
 }

@@ -36,7 +36,11 @@ public class TrxServiceImpl implements TrxService {
     private final ClientRepository clientRepository;
     private final AgreementRepository agreementRepository;
     private final AuthService authService;
-
+    /**
+     * Method returns a list of trxDto if it is not empty
+     * @param accountId
+     * @return List<TrxDto>
+     */
     private List<TrxDto> returnListOfTrxForAccount(Long accountId) {
         List<TrxEntity> trxEntities = trxRepository.findByAccountId(accountId);
         if (trxEntities.isEmpty()) {
@@ -47,8 +51,12 @@ public class TrxServiceImpl implements TrxService {
                 .toList();
     }
 
-
-    private boolean checkOwner(Long accountId, Authentication authentication) {
+    /**
+     * Method checks if the authenticated person is the owner of the account
+     * @param accountId
+     * @param authentication
+     */
+    public boolean checkOwner(Long accountId, Authentication authentication) {
         Optional<UserEntity> optUserEntity = userRepository.findByUsername(authentication.getName());
 
         if (optUserEntity.isEmpty()) {
@@ -58,7 +66,7 @@ public class TrxServiceImpl implements TrxService {
         ClientEntity clientEntity = clientRepository.findByEmail(userEntity.getUsername())
                 .orElseThrow(() -> new NotFoundException("There is no client with such username-email" + authentication.getName()));
         List<AgreementEntity> agreementEntities = agreementRepository.findByClientId(clientEntity.getId());
-        var listOfAccountId = agreementEntities.stream().map(ae -> ae.getAccount().getId()).toList();
+        List<Long> listOfAccountId = agreementEntities.stream().map(ae -> ae.getAccount().getId()).toList();
         if (!listOfAccountId.contains(accountId)) {
             log.info("This account belongs to other user");
             return false;
@@ -102,21 +110,16 @@ public class TrxServiceImpl implements TrxService {
             return trxMapper.toDto(optTrxEntity.get());
         }
     }
-
     @Override
     public List<TrxDto> findByAccountId(Long accountId, Authentication authentication) {
         if (authService.checkRole(authentication, "ROLE_USER")) {
             if (!checkOwner(accountId, authentication)) {
-                throw new NotFoundException("This account belongs to other user");
-            }
+                throw new NotFoundException("This account belongs to other user");}
             return returnListOfTrxForAccount(accountId);
-        } else //if (authService.checkRole(authentication, "ROLE_MANAGER")
-               // || authService.checkRole(authentication, "ROLE_ADMIN")) {
-        { return returnListOfTrxForAccount(accountId);
-
+        } else {
+            return returnListOfTrxForAccount(accountId);
         }
     }
-
     @Override
     public List<TrxDto> findByStatus(Authentication authentication, Long accountId, Status status) {
 
@@ -124,7 +127,6 @@ public class TrxServiceImpl implements TrxService {
             if (!checkOwner(accountId, authentication)) {
                 throw new NotFoundException("This account belongs to other user");
             }
-
             List<TrxEntity> trxEntities = trxRepository.findByStatus(status);
             if (trxEntities.isEmpty()) {
                 throw new NotFoundException("There is no trx with status " + status);
@@ -142,7 +144,6 @@ public class TrxServiceImpl implements TrxService {
                     .toList();
         }
     }
-
     @Transactional
     @Override
     @UserAccess
@@ -185,13 +186,13 @@ public class TrxServiceImpl implements TrxService {
 
     //сомневаюсь, что эти операции нужны
     @Override
-    public TrxDto updateTrx(Long id, TrxDto clientDto) {
+    public TrxDto updateTrx(Long id, TrxDto trxDto) {
         Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
         if (optTrxEntity.isEmpty()) {
-            throw new NotFoundException("Trx cannot be updated," + id + "is not found");
+            throw new NotFoundException("Trx cannot be updated, " + id + " is not found");
         }
         TrxEntity trxEntity = optTrxEntity.get();
-        trxMapper.updateEntity(trxEntity, clientDto);
+        trxMapper.updateEntity(trxEntity, trxDto);
         trxRepository.save(trxEntity);
         log.info("Trx with ID {} is updated", id);
         return trxMapper.toDto(trxEntity);
@@ -201,7 +202,7 @@ public class TrxServiceImpl implements TrxService {
     public void deleteTrx(Long id) {
         Optional<TrxEntity> optTrxEntity = trxRepository.findById(id);
         if (optTrxEntity.isEmpty()) {
-            throw new NotFoundException("Trx" + id + "is " +
+            throw new NotFoundException("Trx " + id + " is " +
                     "not found");
         }
         // trxRepository.deleteById(id);

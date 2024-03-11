@@ -4,13 +4,16 @@ import com.example.banknew.dtos.AccountDto;
 import com.example.banknew.dtos.AgreementDto;
 import com.example.banknew.dtos.ManagerDto;
 import com.example.banknew.dtos.TrxDto;
+import com.example.banknew.entities.ManagerEntity;
 import com.example.banknew.enums.TrxType;
 import com.example.banknew.exception.NotFoundException;
 import com.example.banknew.exception.ValidationException;
+import com.example.banknew.repository.ManagerRepository;
 import com.example.banknew.service.ClientService;
 import com.example.banknew.service.ManagerService;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.Test;
+import org.mockito.Mockito;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.autoconfigure.web.servlet.WebMvcTest;
@@ -25,8 +28,9 @@ import java.util.List;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
-import static org.mockito.Mockito.verify;
-import static org.mockito.Mockito.when;
+import static org.mockito.ArgumentMatchers.eq;
+import static org.mockito.BDDMockito.given;
+import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.delete;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
@@ -42,6 +46,8 @@ class ManagerControllerTest {
     public ObjectMapper objectMapper;
     @MockBean
     public ManagerService managerService;
+    @MockBean
+    public ManagerRepository managerRepository;
 
 
     @WithMockUser(roles = "MANAGER")
@@ -63,6 +69,7 @@ class ManagerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(1));
     }
+
     @WithMockUser(roles = "MANAGER")
     @Test
     void getByLastName_shouldReturn404() throws Exception {
@@ -71,6 +78,7 @@ class ManagerControllerTest {
         mvc.perform(get("/api/manager/search?lastName=Ahbcnjd"))
                 .andExpect(status().isNotFound());
     }
+
     @WithMockUser(roles = "MANAGER")
     @Test
     void getById_shouldReturn200() throws Exception {
@@ -81,6 +89,7 @@ class ManagerControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(5));
     }
+
     @WithMockUser(roles = "MANAGER")
     @Test
     void getById_shouldReturn404() throws Exception {
@@ -89,13 +98,14 @@ class ManagerControllerTest {
         mvc.perform(get("/api/manager/1"))
                 .andExpect(status().isNotFound());
     }
+
     @WithMockUser()
     @Test
     void getById_shouldReturn403() throws Exception {
-
         mvc.perform(get("/api/manager/1"))
                 .andExpect(status().isForbidden());
     }
+
     @WithMockUser(roles = "ADMIN")
     @Test
     void add_shouldReturn200() throws Exception {
@@ -166,24 +176,30 @@ class ManagerControllerTest {
     @Test
     void delete_shouldReturn200() throws Exception {
 
-        mvc.perform(delete("/api/agreement/1"))
+        mvc.perform(delete("/api/manager/1"))
                 .andExpect(status().isOk());
 
     }
-//todo
-//        @WithMockUser(roles = "ADMIN")
+
+//    @WithMockUser(roles = "ADMIN")
 //    @Test
 //    void delete_shouldReturn404() throws Exception {
-//        OngoingStubbing<T> tOngoingStubbing = when(trxService.deleteTrx(any())).thenThrow(new NotFoundException(""));
-//        mvc.perform(delete("/api/trx/1"))
+//        ManagerEntity managerEntity = new ManagerEntity();
+//     //   given(managerService.deleteManager(1L)).willThrow(new NotFoundException("Not Found"));
+//
+//        // Mockito.verify(managerRepository, Mockito.times(1)).save(eq(managerEntity));
+//        managerService.deleteManager(managerEntity.getId());
+//        mvc.perform(delete("/api/manager/1"))
 //                .andExpect(status().isNotFound());
-//        verify(trxService).deleteTrx(1L);
+//        // verify(managerService).deleteManager(1L);
 //    }
+
     @WithMockUser()
     @Test
     void delete_shouldReturn403() throws Exception {
-
-        mvc.perform(delete("/api/manager/1"))
+     //   Long id = 1L;
+      //  doNothing().when(delete("/api/manager/{id}", id));
+        mvc.perform(delete("/api/manager/{id}", 1L))
                 .andExpect(status().isForbidden());
     }
 }

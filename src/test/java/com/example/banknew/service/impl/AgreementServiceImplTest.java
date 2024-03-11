@@ -41,6 +41,8 @@ class AgreementServiceImplTest {
     private AgreementServiceImpl agreementService;
     @Mock
     private AccountServiceImpl accountService;
+    @Mock
+    private ScheduleServiceImpl scheduleService;
 
     @Mock
     private AgreementRepository agreementRepository;
@@ -57,9 +59,10 @@ class AgreementServiceImplTest {
     @Mock
     private ProductMapper productMapper;
     @Mock
-    private ManagerMapper managerMapper;
-    @Mock
     private AccountMapper accountMapper;
+    @Mock
+    private ManagerMapper managerMapper;
+
 
     @Test
     void testGetAll_shouldReturnListAgreementDto() {
@@ -146,7 +149,7 @@ class AgreementServiceImplTest {
     void testFindByAccountId_shouldReturnAgreementDto_ifNotEmptyAgreement() {
         //заглушки
         AgreementEntity agreementEntity = new AgreementEntity();
-        when(agreementRepository.findByAccountId(any())).thenReturn(agreementEntity);
+        when(agreementRepository.findByAccountId(any())).thenReturn(Optional.of(agreementEntity));
 
         //вызов метода
         AgreementDto actual = agreementService.findByAccountId(1L);
@@ -217,8 +220,9 @@ class AgreementServiceImplTest {
         assertEquals("Agreement cannot be updated, 1 is not found", exception.getMessage());
     }
 
+
     @Test
-    void testCreateAgreement_shouldCreateAgreementResponse_happyPAth() {
+    void testCreateAgreement_shouldCreateAgreementResponse_happyPath() {
         //заглушки
         AgreementEntity agreementEntity = new AgreementEntity();
         ClientEntity clientEntity = new ClientEntity();
@@ -247,6 +251,34 @@ class AgreementServiceImplTest {
     }
 
     @Test
+    void testCreateAgreement_shouldValidationExceptionBecauseOfDurationOfProduct() {
+        //заглушки
+        AgreementEntity agreementEntity = new AgreementEntity();
+        ClientEntity clientEntity = new ClientEntity();
+        ProductEntity productEntity = new ProductEntity();
+        ManagerEntity managerEntity = new ManagerEntity();
+        AgreementEntity savedAgreementEntity = new AgreementEntity();
+
+        when(agreementRepository.findById(any())).thenReturn(Optional.of(agreementEntity));
+        CreateAgreementRequest createAgreementRequest = new CreateAgreementRequest();
+        createAgreementRequest.setSum(BigDecimal.valueOf(500));
+        createAgreementRequest.setDuration(12);
+        productEntity.setDepositPeriod(24);
+        productEntity.setLimitMax(BigDecimal.valueOf(50000));
+        productEntity.setLimitMin(BigDecimal.valueOf(5));
+        when(clientRepository.findById(any())).thenReturn(Optional.of(clientEntity));
+        when(productRepository.findById(any())).thenReturn(Optional.of(productEntity));
+        when(managerRepository.findById(any())).thenReturn(Optional.of(managerEntity));
+        when(agreementRepository.saveAndFlush(any())).thenReturn(savedAgreementEntity);
+
+
+        ValidationException exception = assertThrows(ValidationException.class, () -> agreementService.createAgreement(createAgreementRequest));
+        assertEquals("Duration of agreement is less or greater than it is in duration setups of the product", exception.getMessage());
+    }
+
+
+
+        @Test
     void testCreateAgreement_shouldNotFoundException_ifEmptyClientEntity() {
         when(clientRepository.findById(any())).thenReturn(Optional.ofNullable(null));
         NotFoundException exception = assertThrows(NotFoundException.class, () -> agreementService.createAgreement(new CreateAgreementRequest()));

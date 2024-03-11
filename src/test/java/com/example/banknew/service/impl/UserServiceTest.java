@@ -33,7 +33,6 @@ class UserServiceTest {
     @Mock
     private PasswordEncoder passwordEncoder;
 
-    //todo
     @Test
     void testLoadUserByUsername_shouldReturnNewUserEntity() {
         //заглушки

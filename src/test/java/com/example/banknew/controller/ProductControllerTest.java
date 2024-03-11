@@ -63,15 +63,6 @@ class ProductControllerTest {
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.length()").value(0));
     }
-//todo
-    //nado li propisivat NF Exception if list is empty
-//    @WithMockUser(roles = "MANAGER")
-//    @Test
-//    void getAll_shouldReturn404() throws Exception {
-//        when(productService.getAll()).thenReturn(null);
-//        mvc.perform(get("/api/product/"))
-//                .andExpect(status().isNotFound());
-//    }
 
     @WithMockUser(roles = "MANAGER")
     @Test
@@ -235,15 +226,7 @@ class ProductControllerTest {
                 .andExpect(status().isOk());
         verify(productService).deleteProduct(1L);
     }
-//todo
-//    @WithMockUser(roles = "ADMIN")
-//    @Test
-//    void delete_shouldReturn404() throws Exception {
-//        when(productService.deleteProduct(any())).thenThrow(new NotFoundException(""));
-//        mvc.perform(delete("/api/product/1"))
-//                .andExpect(status().isNotFound());
-//        verify(productService).deleteProduct(1L);
-//    }
+
 
     @WithMockUser()
     @Test
