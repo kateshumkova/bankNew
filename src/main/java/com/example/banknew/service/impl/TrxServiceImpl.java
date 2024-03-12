@@ -146,7 +146,6 @@ public class TrxServiceImpl implements TrxService {
     }
     @Transactional
     @Override
-    @UserAccess
     public TrxDto createTrx(TrxDto trxDto, Authentication authentication) {
         if (!authService.checkRole(authentication, "ROLE_USER")) {
             throw new ValidationException("Trx can be created only by clients");
