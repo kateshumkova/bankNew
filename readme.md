@@ -2,7 +2,7 @@ Project Description:
 
 Backend Development of a Banking App
 
-This document provides an overview of an exam project focused on backend development. The goal of the project is to develop the backend part of a banking microservice, utilizing various technologies and frameworks such as Spring Boot, Spring Security, MySQL, Liquibase, Mockito, Swagger, JaCoCo, MapStruct, Hibernate, JPA, and SLF4J.
+This document provides an overview of an exam project focused on backend development. The goal of the project is to develop the backend part of a banking microservice, utilizing various technologies and frameworks such as Spring Boot, Spring Security, MySQL, Liquibase, Mockito, Swagger, JaCoCo, MapStruct, Hibernate, JPA, JUnit 5 JUPITER and SLF4J.
 
 Objective:
 
